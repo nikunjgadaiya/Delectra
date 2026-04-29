@@ -1,0 +1,66 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: #000000;
+  --color-surface: #131313;
+  --color-secondary: #ddb7ff;
+  --color-on-surface: #e5e2e1;
+  --color-on-surface-variant: #cfc4c5;
+
+  --font-sans: "Manrope", sans-serif;
+  --font-heading: "Space Grotesk", sans-serif;
+
+  --spacing-gutter: 24px;
+  --spacing-margin: 32px;
+  --spacing-stack-lg: 56px;
+  --spacing-stack-md: 24px;
+  --spacing-stack-sm: 12px;
+}
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-black text-on-surface font-sans;
+  }
+}
+
+@utility glass-card {
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 2rem;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@utility glass-card-hover {
+  background-color: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
+  transform: translateY(-4px);
+  box-shadow: 0 20px 40px -20px rgba(0, 0, 0, 0.5);
+}
+
+@utility text-gradient {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(to right, #ffffff, #ddb7ff);
+}
+
+@keyframes wave {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@utility text-wave {
+  @apply bg-clip-text text-transparent;
+  background-image: linear-gradient(
+    to right,
+    #ffffff,
+    #ddb7ff,
+    #ffffff,
+    #ddb7ff,
+    #ffffff
+  );
+  background-size: 200% auto;
+  animation: wave 8s ease-in-out infinite;
+}
