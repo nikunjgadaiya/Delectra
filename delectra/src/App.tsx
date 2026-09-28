@@ -19,6 +19,7 @@ import TermsOfService from './components/TermsOfService';
 import CookiesPolicy from './components/CookiesPolicy';
 import InvertCursor from './components/InvertCursor';
 import SplashScreen from './components/SplashScreen';
+import ContactForm from './components/ContactForm';
 
 
 
@@ -155,58 +156,22 @@ function App() {
     setIsDone(false);
 
     let cancelled = false;
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
-    const intervals: ReturnType<typeof setInterval>[] = [];
+    let typeTimer: ReturnType<typeof setInterval>;
 
-    const runCycle = () => {
-      if (cancelled) return;
-
-      // Phase 1: Type forward
-      let i = 0;
-      setDisplayText("");
-      setIsDone(false);
-      const typeTimer = setInterval(() => {
-        if (cancelled) { clearInterval(typeTimer); return; }
-        i++;
-        setDisplayText(fullText.slice(0, i));
-        if (i >= fullText.length) {
-          clearInterval(typeTimer);
-          setIsDone(true);
-
-          // Phase 2: Pause, then backspace
-          const pauseTimeout = setTimeout(() => {
-            if (cancelled) return;
-            setIsDone(false);
-            let j = fullText.length;
-            const backTimer = setInterval(() => {
-              if (cancelled) { clearInterval(backTimer); return; }
-              j--;
-              setDisplayText(fullText.slice(0, j));
-              if (j <= 0) {
-                clearInterval(backTimer);
-
-                // Phase 3: Brief pause, then restart
-                const restartTimeout = setTimeout(() => {
-                  if (cancelled) return;
-                  runCycle();
-                }, 1000);
-                timeouts.push(restartTimeout);
-              }
-            }, 40);
-            intervals.push(backTimer);
-          }, 4000);
-          timeouts.push(pauseTimeout);
-        }
-      }, 50);
-      intervals.push(typeTimer);
-    };
-
-    runCycle();
+    let i = 0;
+    typeTimer = setInterval(() => {
+      if (cancelled) { clearInterval(typeTimer); return; }
+      i++;
+      setDisplayText(fullText.slice(0, i));
+      if (i >= fullText.length) {
+        clearInterval(typeTimer);
+        setIsDone(true);
+      }
+    }, 50);
 
     const cleanup = () => {
       cancelled = true;
-      timeouts.forEach(clearTimeout);
-      intervals.forEach(clearInterval);
+      if (typeTimer) clearInterval(typeTimer);
     };
     animationRef.current = { cleanup };
     return cleanup;
@@ -219,6 +184,15 @@ function App() {
       return cleanup;
     }
   }, [startAnimation, showSplash]);
+
+  // Re-trigger typing when scrolling back to home section from lower sections
+  const prevSectionRef = React.useRef<string>("home");
+  React.useEffect(() => {
+    if (activeSection === "home" && prevSectionRef.current !== "home" && !showSplash) {
+      startAnimation();
+    }
+    prevSectionRef.current = activeSection;
+  }, [activeSection, startAnimation, showSplash]);
 
   const handleSplashComplete = React.useCallback(() => {
     setShowSplash(false);
@@ -288,7 +262,7 @@ function App() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-center max-w-5xl mx-auto"
+          className="text-center max-w-5xl mx-auto relative w-full"
         >
           <motion.div 
             initial={{ opacity: 0, y: 10 }}
@@ -299,32 +273,44 @@ function App() {
             <img src="/logo.png" alt="Delectra" className="h-20 md:h-32 mx-auto transition-transform duration-500 hover:scale-105" />
           </motion.div>
 
-          <h1 className="text-5xl md:text-8xl font-heading font-bold mb-6 leading-[1.0] tracking-tighter inline-block">
-            {displayText.split(" ").slice(0, 4).map((word, i) => (
-              <React.Fragment key={i}>
-                <span>{word}</span>
-                {i < 3 && " "}
-                {i === 3 && <br />}
-              </React.Fragment>
-            ))}
-            <span className="text-gradient">
-              {displayText.split(" ").slice(4).map((word, i) => (
+          <div className="relative inline-block mb-6">
+            {/* Floating PNG Badge anchored to Top-Right of Main Text */}
+            <div className="absolute -right-12 sm:-right-24 md:-right-36 lg:-right-44 -top-8 sm:-top-12 md:-top-16 z-20 cursor-pointer pointer-events-auto float-animation">
+              <img 
+                src="/hero-badge.png" 
+                alt="Badge" 
+                style={{ transform: 'rotate(15deg)' }}
+                className="w-20 sm:w-28 md:w-36 lg:w-44 h-auto object-contain drop-shadow-[0_10px_25px_rgba(168,85,247,0.35)] transition-all duration-300 ease-out hover:scale-110 hover:drop-shadow-[0_15px_35px_rgba(168,85,247,0.65)]"
+              />
+            </div>
+
+            <h1 className="text-5xl md:text-8xl font-heading font-bold leading-[1.0] tracking-tighter inline-block">
+              {displayText.split(" ").slice(0, 4).map((word, i) => (
                 <React.Fragment key={i}>
-                  {i > 0 && " "}
                   <span>{word}</span>
+                  {i < 3 && " "}
+                  {i === 3 && <br />}
                 </React.Fragment>
               ))}
-            </span>
-            <motion.span
-              animate={{ opacity: [0, 1, 0] }}
-              transition={{
-                duration: 0.8,
-                repeat: Infinity,
-                ease: "linear"
-              }}
-              className="inline-block w-[4px] h-[0.8em] bg-secondary ml-1 align-middle"
-            />
-          </h1>
+              <span className="text-gradient">
+                {displayText.split(" ").slice(4).map((word, i) => (
+                  <React.Fragment key={i}>
+                    {i > 0 && " "}
+                    <span>{word}</span>
+                  </React.Fragment>
+                ))}
+              </span>
+              <motion.span
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{
+                  duration: 0.8,
+                  repeat: Infinity,
+                  ease: "linear"
+                }}
+                className="inline-block w-[4px] h-[0.8em] bg-secondary ml-1 align-middle"
+              />
+            </h1>
+          </div>
 
           <motion.p 
             initial={{ opacity: 0, y: 10 }}
@@ -543,12 +529,14 @@ function App() {
           <motion.a 
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
-            href="https://wa.me/yourlink"
-            className="inline-flex items-center gap-4 bg-[#25D366] text-black px-12 py-6 rounded-full font-heading font-bold uppercase tracking-widest text-sm hover:shadow-[0_0_40px_rgba(37,211,102,0.4)] transition-all duration-300"
+            href="https://wa.me/917980228396?text=Hey%20Nikunj%2C%20I%20wanna%20have%20a%20quick%20chat%20about%20your%20services%20got%20a%20minute%3F"
+            className="inline-flex items-center gap-4 bg-[#25D366] text-black px-12 py-6 rounded-full font-heading font-bold uppercase tracking-widest text-sm hover:shadow-[0_0_40px_rgba(37,211,102,0.4)] transition-all duration-300 mb-16"
           >
             <MessageSquare className="w-6 h-6 fill-black" />
             Start on WhatsApp
           </motion.a>
+
+          <ContactForm />
         </div>
       </section>
 
@@ -578,7 +566,7 @@ function App() {
             </div>
           </motion.a>
           
-          <a href="https://wa.me/yourlink" target="_blank" rel="noopener noreferrer" className="text-secondary hover:scale-110 transition-transform flex items-center justify-center">
+          <a href="https://wa.me/917980228396?text=Hey%20Nikunj%2C%20I%20wanna%20have%20a%20quick%20chat%20about%20your%20services%20got%20a%20minute%3F" target="_blank" rel="noopener noreferrer" className="text-secondary hover:scale-110 transition-transform flex items-center justify-center">
             <svg 
               className="w-7 h-7 fill-current" 
               viewBox="0 0 24 24" 

@@ -64,3 +64,20 @@
   background-size: 200% auto;
   animation: wave 8s ease-in-out infinite;
 }
+
+@keyframes seamless-float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-14px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.float-animation {
+  animation: seamless-float 4s ease-in-out infinite;
+  will-change: transform;
+}
