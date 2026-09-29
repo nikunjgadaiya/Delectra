@@ -20,6 +20,7 @@
 @layer base {
   html {
     scroll-behavior: smooth;
+    font-size: 85%;
   }
   body {
     @apply bg-black text-on-surface font-sans;
@@ -80,4 +81,33 @@
 .float-animation {
   animation: seamless-float 4s ease-in-out infinite;
   will-change: transform;
+}
+
+@keyframes cursor-blink {
+  0%, 100% { opacity: 0; }
+  50% { opacity: 1; }
+}
+
+.cursor-blink {
+  animation: cursor-blink 0.8s linear infinite;
+  will-change: opacity;
+}
+
+@keyframes star-glow {
+  0%, 100% { filter: drop-shadow(0 0 0px rgba(221,183,255,0)); }
+  50% { filter: drop-shadow(0 0 6px rgba(221,183,255,0.8)); }
+}
+
+.star-glow {
+  animation: star-glow 2s ease-in-out infinite;
+  will-change: filter;
+}
+
+/* Video Game Optimization */
+.game-optimize:not(.in-view) {
+  animation-play-state: paused !important;
+}
+
+.game-optimize.in-view {
+  animation-play-state: running !important;
 }

@@ -20,6 +20,7 @@ import CookiesPolicy from './components/CookiesPolicy';
 import InvertCursor from './components/InvertCursor';
 import SplashScreen from './components/SplashScreen';
 import ContactForm from './components/ContactForm';
+import AdminPanel from './components/AdminPanel';
 
 
 
@@ -94,12 +95,10 @@ const CTATypingHeading = () => {
 
   return (
     <div ref={ctaRef}>
-      <h2 className="text-6xl md:text-8xl font-heading font-bold mb-12 tracking-tighter leading-tight inline-block text-wave">
+      <h2 className="text-6xl md:text-8xl font-heading font-bold mb-12 tracking-tighter leading-tight inline-block text-wave game-optimize">
         {ctaDisplayText}
-        <motion.span
-          animate={{ opacity: [0, 1, 0] }}
-          transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-          className="inline-block w-[4px] h-[0.8em] bg-secondary ml-1 align-middle"
+        <span
+          className="inline-block w-[4px] h-[0.8em] bg-secondary ml-1 align-middle cursor-blink game-optimize"
         />
       </h2>
     </div>
@@ -116,8 +115,53 @@ function App() {
   const [showCookies, setShowCookies] = React.useState(false);
   const [activeSection, setActiveSection] = React.useState("home");
   const [showSplash, setShowSplash] = React.useState(true);
+  const [isAdminView, setIsAdminView] = React.useState(window.location.pathname === '/admin');
+
+  React.useEffect(() => {
+    const handleLocationChange = () => {
+      setIsAdminView(window.location.pathname === '/admin');
+    };
+    window.addEventListener('popstate', handleLocationChange);
+    return () => window.removeEventListener('popstate', handleLocationChange);
+  }, []);
 
   const animationRef = React.useRef<{ cleanup: () => void } | null>(null);
+
+  // Video Game Optimization: Pause off-screen animations
+  React.useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("in-view");
+          } else {
+            entry.target.classList.remove("in-view");
+          }
+        });
+      },
+      { threshold: 0, rootMargin: "100px" }
+    );
+
+    const optimizeElements = document.querySelectorAll(".game-optimize");
+    optimizeElements.forEach((el) => observer.observe(el));
+
+    const mutationObserver = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        mutation.addedNodes.forEach((node) => {
+          if (node instanceof HTMLElement) {
+            if (node.classList.contains("game-optimize")) observer.observe(node);
+            node.querySelectorAll(".game-optimize").forEach((child) => observer.observe(child));
+          }
+        });
+      });
+    });
+    mutationObserver.observe(document.body, { childList: true, subtree: true });
+
+    return () => {
+      observer.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, []);
 
   // Scroll spy to update active section
   React.useEffect(() => {
@@ -208,6 +252,10 @@ function App() {
     }
   };
 
+  if (isAdminView) {
+    return <AdminPanel />;
+  }
+
   return (
     <div className="relative min-h-screen bg-black overflow-x-hidden selection:bg-secondary/30 selection:text-white">
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
@@ -275,7 +323,7 @@ function App() {
 
           <div className="relative inline-block mb-6">
             {/* Floating PNG Badge anchored to Top-Right of Main Text */}
-            <div className="absolute -right-12 sm:-right-24 md:-right-36 lg:-right-44 -top-8 sm:-top-12 md:-top-16 z-20 cursor-pointer pointer-events-auto float-animation">
+            <div className="absolute -right-12 sm:-right-24 md:-right-36 lg:-right-44 -top-8 sm:-top-12 md:-top-16 z-20 cursor-pointer pointer-events-auto float-animation game-optimize">
               <img 
                 src="/hero-badge.png" 
                 alt="Badge" 
@@ -300,14 +348,8 @@ function App() {
                   </React.Fragment>
                 ))}
               </span>
-              <motion.span
-                animate={{ opacity: [0, 1, 0] }}
-                transition={{
-                  duration: 0.8,
-                  repeat: Infinity,
-                  ease: "linear"
-                }}
-                className="inline-block w-[4px] h-[0.8em] bg-secondary ml-1 align-middle"
+              <span
+                className="inline-block w-[4px] h-[0.8em] bg-secondary ml-1 align-middle cursor-blink game-optimize"
               />
             </h1>
           </div>
@@ -483,23 +525,12 @@ function App() {
                           ease: "backOut"
                         }}
                       >
-                        <motion.div
-                          animate={{ 
-                            filter: [
-                              "drop-shadow(0 0 0px rgba(221,183,255,0))",
-                              "drop-shadow(0 0 6px rgba(221,183,255,0.8))",
-                              "drop-shadow(0 0 0px rgba(221,183,255,0))"
-                            ]
-                          }}
-                          transition={{ 
-                            duration: 2,
-                            repeat: Infinity,
-                            delay: 0.3 * j,
-                            ease: "easeInOut"
-                          }}
+                        <div
+                          className="star-glow game-optimize"
+                          style={{ animationDelay: `${0.3 * j}s` }}
                         >
                           <Star className="w-4 h-4 text-secondary fill-secondary" />
-                        </motion.div>
+                        </div>
                       </motion.div>
                     ))}
                   </div>

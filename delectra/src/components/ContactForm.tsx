@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Send, MapPin, User, Mail, Phone, MessageSquare } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Send, MapPin, User, Mail, Phone, MessageSquare, CheckCircle2 } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 export default function ContactForm() {
@@ -35,6 +35,22 @@ export default function ContactForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
+    
+    // Save to local storage for Admin Panel
+    const newSubmission = {
+      ...formData,
+      id: crypto.randomUUID(),
+      date: new Date().toISOString(),
+      status: 'new',
+      remarks: '',
+      sales: 0
+    };
+    
+    const existing = localStorage.getItem('contact_submissions');
+    const submissions = existing ? JSON.parse(existing) : [];
+    submissions.unshift(newSubmission);
+    localStorage.setItem('contact_submissions', JSON.stringify(submissions));
+
     // Simulate API call
     setTimeout(() => {
       setIsSubmitting(false);
@@ -191,6 +207,32 @@ export default function ContactForm() {
           </motion.button>
         </form>
       </div>
+
+      <AnimatePresence>
+        {isSubmitted && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 z-50 flex flex-col items-center justify-center bg-black/70 backdrop-blur-md"
+          >
+            <motion.div
+              initial={{ scale: 0.5, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", damping: 15, stiffness: 200, delay: 0.1 }}
+              className="flex flex-col items-center"
+            >
+              <CheckCircle2 className="w-24 h-24 text-green-500 mb-6 drop-shadow-[0_0_15px_rgba(34,197,94,0.5)]" />
+              <h2 className="text-4xl md:text-5xl font-heading font-bold text-white tracking-tighter">
+                Message Sent!
+              </h2>
+              <p className="text-gray-400 mt-3 text-sm uppercase tracking-widest font-heading font-bold text-center px-4">
+                We'll be in touch soon.
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </motion.div>
   );
 }

@@ -57,7 +57,7 @@ const Footer = ({ onSocialClick, onPrivacyClick, onTermsClick, onCookiesClick }:
   };
 
   return (
-    <footer className="relative z-10 pt-24 pb-12 border-t border-white/5 bg-[#030303]">
+    <footer className="relative z-10 pt-24 pb-36 md:pb-32 border-t border-white/5 bg-[#030303]">
       <div className="max-w-7xl mx-auto px-gutter">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-20">
 
