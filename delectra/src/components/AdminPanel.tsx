@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, AlertCircle, CheckCircle2, ChevronLeft, ChevronDown, Eye, EyeOff, Search, Calendar, Mail, Phone, MapPin, Filter, X, Trash2, ArrowUpDown, TrendingUp, Edit2, RotateCcw } from 'lucide-react';
+import { Lock, AlertCircle, ChevronLeft, ChevronDown, Eye, EyeOff, Search, Calendar, Mail, Phone, MapPin, Filter, X, Trash2, ArrowUpDown, TrendingUp, Edit2, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const COOLDOWN_STAGES = [
@@ -90,7 +90,7 @@ const CustomCalendar = ({ startDate, endDate, onChange }: any) => {
           
           let dayClass = "w-8 h-8 flex items-center justify-center text-[13px] rounded-full cursor-pointer transition-all z-10 relative ";
           
-          if (status === 'start' || status === 'end' || (status === 'start' && !endDate)) {
+          if (status === 'start' || status === 'end') {
             dayClass += "bg-secondary text-black font-bold shadow-[0_0_15px_rgba(221,183,255,0.6)]";
           } else if (status === 'in-range') {
             dayClass += "text-white font-medium hover:bg-white/10";
@@ -195,7 +195,7 @@ export default function AdminPanel() {
   const [activeFilterOption, setActiveFilterOption] = useState('all');
   const [showSort, setShowSort] = useState(false);
   const [sortConfig, setSortConfig] = useState({ key: 'date', dir: 'desc' });
-  const [activeTab, setActiveTab] = useState('all');
+  const [activeTab, setActiveTab] = useState('new');
   const actionMenuRef = React.useRef<HTMLDivElement>(null);
   
   useEffect(() => {
@@ -467,16 +467,38 @@ export default function AdminPanel() {
                    ? submissions.filter(s => s.status !== 'deleted').length 
                    : submissions.filter(s => s.status === tab).length;
                    
+                 let activeStyle = '';
+                 let inactiveStyle = '';
+                 let badgeActive = 'bg-black/20 text-black';
+                 let badgeInactive = 'bg-black/20 text-current';
+
+                 if (tab === 'all') {
+                   activeStyle = 'bg-secondary text-black border-transparent shadow-[0_0_15px_rgba(221,183,255,0.4)]';
+                   inactiveStyle = 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white';
+                   badgeInactive = 'bg-white/10 text-white';
+                 } else if (tab === 'deleted') {
+                   activeStyle = 'bg-red-500 text-black border-transparent shadow-[0_0_15px_rgba(239,68,68,0.4)]';
+                   inactiveStyle = 'bg-red-500/10 text-red-400 border-red-500/20 hover:bg-red-500/20';
+                 } else {
+                   const c = STATUS_COLORS[tab];
+                   activeStyle = `${c.dot} text-black border-transparent`;
+                   inactiveStyle = `${c.bg} ${c.text} ${c.border} hover:opacity-80`;
+                 }
+
                  return (
                    <button 
                      key={tab}
                      onClick={() => setActiveTab(tab)} 
-                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold font-heading uppercase tracking-widest whitespace-nowrap transition-colors ${activeTab === tab ? 'bg-secondary text-black' : 'bg-white/5 text-gray-400 hover:bg-white/10 hover:text-white'}`}
+                     className={`flex items-center gap-2 px-4 py-2 rounded-full text-xs font-bold font-heading uppercase tracking-widest whitespace-nowrap transition-all border ${
+                       activeTab === tab ? activeStyle : inactiveStyle
+                     }`}
                    >
                      {tab === 'all' ? 'All Leads' : tab}
-                     <span className={`px-2 py-0.5 rounded-full text-[10px] ${activeTab === tab ? 'bg-black/20 text-black' : 'bg-white/10 text-white'}`}>
-                       {count}
-                     </span>
+                     {count > 0 && (
+                       <span className={`px-2 py-0.5 rounded-full text-[10px] ${activeTab === tab ? badgeActive : badgeInactive}`}>
+                         {count}
+                       </span>
+                     )}
                    </button>
                  );
                })}
@@ -679,40 +701,8 @@ export default function AdminPanel() {
                           }
                         }}
                       >
-                         {/* Absolute Action Buttons */}
-                         {sub.status === 'deleted' ? (
-                           <div className="absolute top-6 right-6 flex gap-2 z-30">
-                             <button 
-                               onClick={() => updateSubmission(sub.id, { status: 'pending' })}
-                               className="p-2 bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white rounded-full transition-colors"
-                               title="Restore Submission"
-                             >
-                               <RotateCcw className="w-4 h-4" />
-                             </button>
-                             <button 
-                               onClick={() => {
-                                 if(window.confirm('Permanently delete this submission? This cannot be undone.')) {
-                                   deleteSubmission(sub.id);
-                                 }
-                               }}
-                               className="p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-full transition-colors"
-                               title="Permanently Delete"
-                             >
-                               <Trash2 className="w-4 h-4" />
-                             </button>
-                           </div>
-                         ) : (
-                           <button 
-                             onClick={() => updateSubmission(sub.id, { status: 'deleted' })}
-                             className="absolute top-6 right-6 p-2 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-full transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 z-30"
-                             title="Move to Trash"
-                           >
-                             <Trash2 className="w-4 h-4" />
-                           </button>
-                         )}
-  
                          {/* Header Section */}
-                         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 relative z-20 pr-12 md:pr-16">
+                         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4 relative z-20">
                            <div>
                              <h4 className="text-2xl font-bold text-white tracking-tight mb-2">{sub.name}</h4>
                              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm text-gray-400 font-medium">
@@ -729,6 +719,38 @@ export default function AdminPanel() {
                                   value={sub.status || 'new'} 
                                   onChange={(val) => updateSubmission(sub.id, { status: val })}
                                 />
+                                
+                                {/* Action Buttons Inline */}
+                                {sub.status === 'deleted' ? (
+                                  <div className="flex items-center gap-2 ml-1">
+                                    <button 
+                                      onClick={() => updateSubmission(sub.id, { status: 'pending' })}
+                                      className="p-1.5 bg-green-500/10 text-green-500 hover:bg-green-500 hover:text-white rounded-lg transition-colors"
+                                      title="Restore Submission"
+                                    >
+                                      <RotateCcw className="w-4 h-4" />
+                                    </button>
+                                    <button 
+                                      onClick={() => {
+                                        if(window.confirm('Permanently delete this submission? This cannot be undone.')) {
+                                          deleteSubmission(sub.id);
+                                        }
+                                      }}
+                                      className="p-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors"
+                                      title="Permanently Delete"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                  </div>
+                                ) : (
+                                  <button 
+                                    onClick={() => updateSubmission(sub.id, { status: 'deleted' })}
+                                    className="p-1.5 bg-red-500/10 text-red-500 hover:bg-red-500 hover:text-white rounded-lg transition-colors opacity-0 group-hover:opacity-100 focus:opacity-100 ml-1"
+                                    title="Move to Trash"
+                                  >
+                                    <Trash2 className="w-4 h-4" />
+                                  </button>
+                                )}
                               </div>
                               
                               <div className="flex items-center gap-2 bg-black/40 border border-white/10 px-3 py-1.5 rounded-xl focus-within:border-green-500/50 focus-within:bg-green-500/10 transition-all">
@@ -744,29 +766,34 @@ export default function AdminPanel() {
                            </div>
                          </div>
                          
-                         {/* Message Body */}
-                         <div className="relative z-0">
-                           <p className="text-gray-300 text-[15px] leading-relaxed font-light">
-                             {sub.description}
-                           </p>
-                         </div>
-  
-                         {/* Footer (Remarks & Date) */}
-                         <div className="pt-5 border-t border-white/5 flex flex-col md:flex-row justify-between items-start md:items-end gap-6 relative z-0">
-                           <div className="flex-1 w-full max-w-2xl">
-                             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-                               <Edit2 className="w-3 h-3" /> Admin Remarks
+                         {/* Body Grid: Description & Admin Remarks side by side */}
+                         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mt-2 relative z-0 border-t border-white/5 pt-6">
+                           <div>
+                             <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                               Message
                              </label>
-                             <textarea
-                               value={sub.remarks || ''}
-                               onChange={(e) => updateSubmission(sub.id, { remarks: e.target.value })}
-                               placeholder="Add private tracking remarks here..."
-                               className="w-full bg-transparent border-b border-white/10 pb-2 text-sm text-white resize-none focus:outline-none focus:border-secondary transition-colors placeholder-gray-700 font-light"
-                               rows={1}
-                             />
+                             <p className="text-gray-300 text-[15px] leading-relaxed font-light">
+                               {sub.description}
+                             </p>
                            </div>
-                           <div className="text-xs text-gray-600 font-medium whitespace-nowrap shrink-0">
-                             {new Date(sub.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                           
+                           <div className="flex flex-col justify-between h-full">
+                             <div>
+                               <label className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-3 flex items-center gap-2">
+                                 <Edit2 className="w-3 h-3" /> Admin Remarks
+                               </label>
+                               <textarea
+                                 value={sub.remarks || ''}
+                                 onChange={(e) => updateSubmission(sub.id, { remarks: e.target.value })}
+                                 placeholder="Add private tracking remarks here..."
+                                 className="w-full bg-transparent border-b border-white/10 pb-2 text-sm text-white resize-none focus:outline-none focus:border-secondary transition-colors placeholder-gray-700 font-light min-h-[40px]"
+                                 rows={2}
+                               />
+                             </div>
+                             
+                             <div className="text-sm font-bold text-white text-right mt-6 flex justify-end items-center opacity-80">
+                               {new Date(sub.date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                             </div>
                            </div>
                          </div>
                       </motion.div>
