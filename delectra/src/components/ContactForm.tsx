@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Send, MapPin, User, Mail, Phone, MessageSquare, CheckCircle2 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 
 export default function ContactForm() {
   const [formData, setFormData] = useState({
@@ -32,11 +33,10 @@ export default function ContactForm() {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Save to local storage for Admin Panel
     const newSubmission = {
       ...formData,
       id: crypto.randomUUID(),
@@ -45,26 +45,30 @@ export default function ContactForm() {
       remarks: '',
       sales: 0
     };
-    
-    const existing = localStorage.getItem('contact_submissions');
-    const submissions = existing ? JSON.parse(existing) : [];
-    submissions.unshift(newSubmission);
-    localStorage.setItem('contact_submissions', JSON.stringify(submissions));
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
-      setIsSubmitted(true);
-      setFormData({
-        name: '',
-        email: '',
-        phone: '',
-        city: '',
-        country: '',
-        description: ''
-      });
-      setTimeout(() => setIsSubmitted(false), 3000);
-    }, 1500);
+    if (isSupabaseConfigured) {
+      const { error } = await supabase.from('submissions').insert([newSubmission]);
+      if (error) {
+        console.error('Error saving submission:', error);
+      }
+    } else {
+      const existing = localStorage.getItem('contact_submissions');
+      const submissions = existing ? JSON.parse(existing) : [];
+      submissions.unshift(newSubmission);
+      localStorage.setItem('contact_submissions', JSON.stringify(submissions));
+    }
+
+    setIsSubmitting(false);
+    setIsSubmitted(true);
+    setFormData({
+      name: '',
+      email: '',
+      phone: '',
+      city: '',
+      country: '',
+      description: ''
+    });
+    setTimeout(() => setIsSubmitted(false), 3000);
   };
 
   return (

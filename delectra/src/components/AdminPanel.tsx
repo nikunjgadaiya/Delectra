@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { Lock, AlertCircle, ChevronLeft, ChevronDown, Eye, EyeOff, Search, Calendar, Mail, Phone, MapPin, Filter, X, Trash2, ArrowUpDown, TrendingUp, Edit2, RotateCcw } from 'lucide-react';
+import { Lock, AlertCircle, ChevronLeft, ChevronDown, Eye, EyeOff, Search, Calendar, Mail, Phone, MapPin, Filter, X, Trash2, ArrowUpDown, TrendingUp, Edit2, RotateCcw, Key } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
+import { supabase, isSupabaseConfigured } from '../lib/supabase';
 const COOLDOWN_STAGES = [
   30 * 1000, 60 * 1000, 5 * 60 * 1000, 10 * 60 * 1000, 30 * 60 * 1000, 60 * 60 * 1000
 ];
@@ -183,6 +183,14 @@ export default function AdminPanel() {
   const [error, setError] = useState('');
   const [showSplash, setShowSplash] = useState(true);
 
+  // Change Password State
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [oldPassword, setOldPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordError, setPasswordError] = useState('');
+  const [passwordSuccess, setPasswordSuccess] = useState('');
+
   // Submissions state
   const [submissions, setSubmissions] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -236,17 +244,39 @@ export default function AdminPanel() {
 
   useEffect(() => {
     if (isLoggedIn) {
-      const existing = localStorage.getItem('contact_submissions');
-      if (existing) {
-        // Migration mapping to ensure backwards compat with old submissions lacking status/remarks/sales
-        const parsed = JSON.parse(existing).map((s: any) => ({
-          ...s,
-          status: s.status || 'new',
-          remarks: s.remarks || '',
-          sales: s.sales || 0
-        }));
-        setSubmissions(parsed);
-      }
+      const fetchSubmissions = async () => {
+        if (isSupabaseConfigured) {
+          const { data, error } = await supabase
+            .from('submissions')
+            .select('*')
+            .order('date', { ascending: false });
+            
+          if (error) {
+            console.error('Error fetching submissions:', error);
+            return;
+          }
+          
+          if (data) {
+            const parsed = data.map((s: any) => ({
+              ...s,
+              status: s.status || 'new',
+              remarks: s.remarks || '',
+              sales: s.sales || 0
+            }));
+            setSubmissions(parsed);
+          }
+        } else {
+          const stored = localStorage.getItem('contact_submissions');
+          if (stored) {
+            const parsed = JSON.parse(stored);
+            setSubmissions(parsed);
+          } else {
+            setSubmissions([]);
+          }
+        }
+      };
+      
+      fetchSubmissions();
     }
   }, [isLoggedIn]);
 
@@ -280,7 +310,8 @@ export default function AdminPanel() {
     e.preventDefault();
     if (cooldownEnd && cooldownRemaining > 0) return;
 
-    if (username === 'admin' && password === 'Nikunj#15') {
+    const currentPassword = localStorage.getItem('admin_custom_password') || 'Nikunj#15';
+    if (username === 'admin' && password === currentPassword) {
       setIsLoggedIn(true);
       localStorage.setItem('admin_auth', 'true');
       setError('');
@@ -299,16 +330,76 @@ export default function AdminPanel() {
     }
   };
 
-  const updateSubmission = (id: string, updates: any) => {
-    const newSubs = submissions.map(s => s.id === id ? { ...s, ...updates } : s);
-    setSubmissions(newSubs);
-    localStorage.setItem('contact_submissions', JSON.stringify(newSubs));
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    const currentPassword = localStorage.getItem('admin_custom_password') || 'Nikunj#15';
+    if (oldPassword !== currentPassword) {
+      setPasswordError('Old password is incorrect');
+      setPasswordSuccess('');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('New passwords do not match');
+      setPasswordSuccess('');
+      return;
+    }
+    if (newPassword.length < 6) {
+      setPasswordError('Password must be at least 6 characters');
+      setPasswordSuccess('');
+      return;
+    }
+    
+    localStorage.setItem('admin_custom_password', newPassword);
+    setPasswordError('');
+    setPasswordSuccess('Password changed successfully!');
+    
+    setTimeout(() => {
+      setShowPasswordModal(false);
+      setOldPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+      setPasswordSuccess('');
+    }, 1500);
   };
 
-  const deleteSubmission = (id: string) => {
+  const updateSubmission = async (id: string, updates: any) => {
+    // Update local state for immediate feedback (Optimistic UI)
+    const newSubs = submissions.map(s => s.id === id ? { ...s, ...updates } : s);
+    setSubmissions(newSubs);
+    
+    if (isSupabaseConfigured) {
+      // Update Supabase
+      const { error } = await supabase
+        .from('submissions')
+        .update(updates)
+        .eq('id', id);
+        
+      if (error) {
+        console.error('Error updating submission:', error);
+      }
+    } else {
+      localStorage.setItem('contact_submissions', JSON.stringify(newSubs));
+    }
+  };
+
+  const deleteSubmission = async (id: string) => {
+    // Optimistic UI update
     const newSubs = submissions.filter(s => s.id !== id);
     setSubmissions(newSubs);
-    localStorage.setItem('contact_submissions', JSON.stringify(newSubs));
+    
+    if (isSupabaseConfigured) {
+      // Delete from Supabase
+      const { error } = await supabase
+        .from('submissions')
+        .delete()
+        .eq('id', id);
+        
+      if (error) {
+        console.error('Error deleting submission:', error);
+      }
+    } else {
+      localStorage.setItem('contact_submissions', JSON.stringify(newSubs));
+    }
   };
 
   const formatTime = (ms: number) => {
@@ -411,6 +502,90 @@ export default function AdminPanel() {
             </motion.div>
           )}
         </AnimatePresence>
+
+        <AnimatePresence>
+          {showPasswordModal && (
+            <motion.div 
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4"
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 10 }}
+                className="bg-[#111] border border-white/10 rounded-2xl p-6 md:p-8 w-full max-w-md relative"
+              >
+                <button 
+                  onClick={() => {
+                    setShowPasswordModal(false);
+                    setPasswordError('');
+                    setPasswordSuccess('');
+                  }}
+                  className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white hover:bg-white/5 rounded-full transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+                
+                <h2 className="text-2xl font-heading font-bold text-white mb-6">Change Password</h2>
+                
+                <form onSubmit={handleChangePassword} className="space-y-4">
+                  {passwordError && (
+                    <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+                      <p className="text-sm text-red-400">{passwordError}</p>
+                    </div>
+                  )}
+                  {passwordSuccess && (
+                    <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-lg flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-green-500 shrink-0 mt-0.5" />
+                      <p className="text-sm text-green-400">{passwordSuccess}</p>
+                    </div>
+                  )}
+                  
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Old Password</label>
+                    <input
+                      type="password"
+                      value={oldPassword}
+                      onChange={e => setOldPassword(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-secondary transition-colors"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">New Password</label>
+                    <input
+                      type="password"
+                      value={newPassword}
+                      onChange={e => setNewPassword(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-secondary transition-colors"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-2 block">Confirm New Password</label>
+                    <input
+                      type="password"
+                      value={confirmPassword}
+                      onChange={e => setConfirmPassword(e.target.value)}
+                      className="w-full bg-white/5 border border-white/10 rounded-lg py-3 px-4 text-white focus:outline-none focus:border-secondary transition-colors"
+                      required
+                    />
+                  </div>
+                  
+                  <button
+                    type="submit"
+                    className="w-full py-3 bg-secondary text-black font-heading font-bold uppercase tracking-widest rounded-lg hover:bg-white transition-colors mt-6"
+                  >
+                    Update Password
+                  </button>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         
         <div className="max-w-7xl mx-auto">
           <header className="flex justify-between items-center mb-8">
@@ -419,6 +594,13 @@ export default function AdminPanel() {
               <a href="/" className="text-sm font-heading tracking-widest text-secondary hover:text-white transition-colors uppercase hidden md:block">
                 Back to Site
               </a>
+              <button 
+                onClick={() => setShowPasswordModal(true)}
+                className="p-2 rounded-full border border-white/10 hover:bg-white/5 transition-colors text-gray-400 hover:text-white"
+                title="Change Password"
+              >
+                <Key className="w-4 h-4" />
+              </button>
               <button 
                 onClick={() => {
                   setIsLoggedIn(false);
@@ -639,11 +821,21 @@ export default function AdminPanel() {
                        initial={{ opacity: 0, scale: 0.8, width: 0, paddingLeft: 0, paddingRight: 0 }}
                        animate={{ opacity: 1, scale: 1, width: 'auto', paddingLeft: 16, paddingRight: 16 }}
                        exit={{ opacity: 0, scale: 0.8, width: 0, paddingLeft: 0, paddingRight: 0 }}
-                       onClick={() => {
+                       onClick={async () => {
                          if(window.confirm('Empty trash? This will permanently delete all submissions in the deleted tab.')) {
+                           // Optimistic UI update
                            const newSubs = submissions.filter(s => s.status !== 'deleted');
                            setSubmissions(newSubs);
-                           localStorage.setItem('contact_submissions', JSON.stringify(newSubs));
+                           
+                           // Delete all with status 'deleted' from Supabase
+                           const { error } = await supabase
+                             .from('submissions')
+                             .delete()
+                             .eq('status', 'deleted');
+                             
+                           if (error) {
+                             console.error('Error emptying trash:', error);
+                           }
                          }
                        }}
                        className="flex items-center gap-2 py-2.5 bg-red-500/10 border border-red-500/20 text-red-400 rounded-lg text-sm font-bold font-heading hover:bg-red-500/20 transition-all whitespace-nowrap overflow-hidden mr-2"
