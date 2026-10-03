@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import Lenis from 'lenis';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -12,6 +12,7 @@ import {
   Zap,
   Globe,
   Star,
+  ArrowUpRight,
 } from 'lucide-react';
 import Footer from './components/Footer';
 import SocialsComingSoon from './components/SocialsComingSoon';
@@ -25,26 +26,19 @@ import AdminPanel from './components/AdminPanel';
 import ThreeCurrencyRain from './components/ThreeCurrencyRain';
 import ServiceMarquee from './components/ServiceMarquee';
 import MagneticButton from './components/MagneticButton';
+import TypewriterHeading from './components/TypewriterHeading';
 
 gsap.registerPlugin(ScrollTrigger);
 
 // Project Data
 const portfolioProjects = [
   {
-    id: 'lumina',
-    title: 'Lumina Cosmetics',
-    category: 'Branding & Web',
-    tag: 'Branding',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBSPTevSWPZoJ7HrkTS0_k7BHQGPPmdZ2JZcMOvQVEXyghjynP2GlQ-1ql_igzPFtYRNPLrvRkBa5e5ALwUKwWMhXNP4wBFQ147rW3bJSdiXbtfF08k8y7247PGKQhpX-hBVZVhTKi7Vd1MKS9sLg0NZbtD1E0dWkM43EPHARWnHrsWwbVjEpEx9VYUvaHgjE5LV2FcXRSMoiX60JilvSV2VNpZas671dlMfflXlK3jyyPLvR2Tc5QYqvDgj6zyBo9Nc1o58VANOkRt',
-  },
-  {
-    id: 'vortex',
-    title: 'Vortex NFT',
-    category: 'Social Media',
-    tag: 'Web',
-    image:
-      'https://lh3.googleusercontent.com/aida-public/AB6AXuBgZuMbFzEW43jPfGPeWXja0qrDd_bCunDLDNtXHYj35pdFqmVgW3XhdLrl0xNeI8F3pS1KuKph59rLCAPzzg8PUdLCjSaMJAxM6d0CP3tDT2774UnWiBGPAlkWMIbQwrA5_aYMl08Kz95uubve27iwBmytrjKPw-jK_iKxHPv2D8-P9oMCoAO2hc-tslqvtTK0QRhnddwB_42_3jSNkJgguDCaNLeSOaI-123hMXpCACHP-PXvW7EUHqYf57bBtPzewj3MsL8JJKZl',
+    id: 'Drriftaire',
+    title: 'Drriftaire',
+    category: 'Website Development',
+    tag: 'Website Development',
+    description: 'A modern agricultural company that utilizes advanced drones to efficiently spray water and fertilizer on crops.',
+    image: '/drriftaire-3d.jpg',
   },
 ];
 
@@ -95,7 +89,6 @@ export default function App() {
   const [showTerms, setShowTerms] = useState(false);
   const [showCookies, setShowCookies] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
-  const [portfolioTab, setPortfolioTab] = useState<'All' | 'Branding' | 'Web'>('All');
   const [activeServiceRow, setActiveServiceRow] = useState<number>(0);
   const [isAdminView, setIsAdminView] = useState(window.location.pathname === '/admin');
 
@@ -111,7 +104,6 @@ export default function App() {
   const whyUsRef = useRef<HTMLElement>(null);
   const servicesRef = useRef<HTMLElement>(null);
   const portfolioRef = useRef<HTMLElement>(null);
-  const portfolioTrackRef = useRef<HTMLDivElement>(null);
   const testimonialsRef = useRef<HTMLElement>(null);
   const contactRef = useRef<HTMLElement>(null);
   const contactHeadlineRef = useRef<HTMLHeadingElement>(null);
@@ -181,26 +173,22 @@ export default function App() {
         });
       }
 
-      // 2. Hero Lines Slide Up on load & Parallax Out on scroll
+      // 2. Hero Lines Slide Up on load & Stay Solid on scroll
       if (heroLinesRef.current) {
         const textElements = heroLinesRef.current.querySelectorAll('.hero-anim-item');
         gsap.fromTo(
           textElements,
-          { y: 50, opacity: 0 },
-          { y: 0, opacity: 1, duration: 1.1, stagger: 0.15, ease: 'power4.out', delay: 0.1 }
+          { y: 40, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 1,
+            stagger: 0.12,
+            ease: 'power3.out',
+            delay: 0.1,
+            clearProps: 'opacity,transform',
+          }
         );
-
-        gsap.to(textElements, {
-          yPercent: -28,
-          opacity: 0.15,
-          ease: 'none',
-          scrollTrigger: {
-            trigger: heroSectionRef.current,
-            start: 'top top',
-            end: 'bottom top',
-            scrub: true,
-          },
-        });
       }
 
       // 3. Why Us Columns rise at different speeds, scrubbed
@@ -277,26 +265,6 @@ export default function App() {
         });
       }
 
-      // 5. Portfolio Pinned Horizontal Scroll & Frame Skew
-      if (portfolioRef.current && portfolioTrackRef.current) {
-        const track = portfolioTrackRef.current;
-        const totalShift = track.scrollWidth - window.innerWidth + 120;
-
-        if (totalShift > 0 && window.innerWidth >= 768) {
-          gsap.to(track, {
-            x: -totalShift,
-            ease: 'none',
-            scrollTrigger: {
-              trigger: portfolioRef.current,
-              pin: true,
-              start: 'top top',
-              end: () => `+=${totalShift + 300}`,
-              scrub: 1,
-              invalidateOnRefresh: true,
-            },
-          });
-        }
-      }
 
       // 6. Testimonial Cards Tilt In & Quote words light up
       if (testimonialsRef.current) {
@@ -401,10 +369,6 @@ export default function App() {
     window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
-  const filteredProjects = useMemo(() => {
-    if (portfolioTab === 'All') return portfolioProjects;
-    return portfolioProjects.filter((p) => p.tag === portfolioTab);
-  }, [portfolioTab]);
 
   if (isAdminView) {
     return <AdminPanel />;
@@ -502,15 +466,7 @@ export default function App() {
               />
             </div>
 
-            <h1 className="hero-anim-item text-5xl sm:text-6xl md:text-8xl font-heading font-bold leading-[1.0] tracking-tighter inline-block">
-              <span>We</span>{' '}
-              <span>build</span>{' '}
-              <span>brands</span>{' '}
-              <span>that</span>
-              <br />
-              <span className="accent-serif">print</span>{' '}
-              <span className="accent-serif">money.</span>
-            </h1>
+            <TypewriterHeading startTyping={!showSplash} />
           </div>
 
           {/* Subheading */}
@@ -541,7 +497,7 @@ export default function App() {
                   Creative + Strategy
                 </h3>
                 <p className="text-[#8d869c] leading-relaxed text-sm">
-                  Bold ideas grounded in market-moving data and strategic insights.
+                  We research new trends on a daily basis to make your brand stand out.
                 </p>
               </div>
             </div>
@@ -554,7 +510,7 @@ export default function App() {
                   Fast Execution
                 </h3>
                 <p className="text-[#8d869c] leading-relaxed text-sm">
-                  Rapid delivery without sacrificing the premium polish your brand deserves.
+                  Rapid delivery with fast response and turn-around time, cause we want our clients to be updated.
                 </p>
               </div>
             </div>
@@ -580,7 +536,7 @@ export default function App() {
                   Modern Design
                 </h3>
                 <p className="text-[#8d869c] leading-relaxed text-sm">
-                  Avant-garde aesthetics tailored for the modern, high-end digital landscape.
+                  Delivering whats trending in market today.
                 </p>
               </div>
             </div>
@@ -603,62 +559,44 @@ export default function App() {
       >
         <div className="max-w-7xl mx-auto">
           {/* Header & Tabs */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
-            <div className="max-w-xl">
-              <h2 className="text-4xl md:text-5xl font-heading font-bold mb-3 tracking-tight">
-                Portfolio
-              </h2>
-              <p className="text-[#8d869c] text-base">
-                Visionary works for brands that demand excellence.
-              </p>
-            </div>
-
-            <div className="flex gap-6 border-b border-white/10 pb-1">
-              {(['All', 'Branding', 'Web'] as const).map((tab) => (
-                <span
-                  key={tab}
-                  onClick={() => setPortfolioTab(tab)}
-                  className={`font-heading text-xs uppercase tracking-widest cursor-pointer transition-colors pb-1 ${
-                    portfolioTab === tab
-                      ? 'text-[#2bd96b] border-b-2 border-[#2bd96b]'
-                      : 'text-[#8d869c] hover:text-[#ece8f5]'
-                  }`}
-                >
-                  {tab}
-                </span>
-              ))}
-            </div>
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-heading font-bold mb-4 tracking-tight">
+              Portfolio
+            </h2>
+            <div aria-hidden="true" className="w-12 h-1 bg-[#2bd96b] mx-auto rounded-full mb-6" />
+            <p className="text-[#8d869c] text-base max-w-xl mx-auto">
+              Visionary works for brands that demand excellence.
+            </p>
           </div>
-
-          {/* Horizontal Track Container */}
-          <div
-            ref={portfolioTrackRef}
-            className="portfolio-track flex gap-8 pb-4 items-stretch select-none"
-          >
-            {filteredProjects.map((project) => (
-              <div
-                key={project.id}
-                className="portfolio-frame w-[85vw] sm:w-[500px] md:w-[620px] shrink-0 group relative overflow-hidden rounded-[2rem] h-[480px] border border-white/10 bg-[#0e0d14]/70"
-              >
-                <img
-                  src={project.image}
-                  alt={project.title}
-                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
-                />
-                <div
-                  aria-hidden="true"
-                  className="absolute inset-0 bg-gradient-to-t from-[#07060b] via-[#07060b]/30 to-transparent opacity-85"
-                />
-                <div className="absolute bottom-0 left-0 p-8 md:p-12">
-                  <span className="text-[10px] font-heading font-bold uppercase tracking-widest text-[#2bd96b] mb-2 block">
-                    {project.category}
-                  </span>
-                  <h4 className="text-2xl md:text-4xl font-heading font-bold text-[#ece8f5]">
-                    {project.title}
-                  </h4>
-                </div>
+          {/* Featured Project (Single Item) */}
+          <div className="w-full relative group overflow-hidden rounded-[2rem] border border-white/10 bg-[#0e0d14]/70 aspect-[16/9] md:aspect-[21/9]">
+            <img
+              src={portfolioProjects[0].image}
+              alt={portfolioProjects[0].title}
+              className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+            />
+            <div
+              aria-hidden="true"
+              className="absolute inset-0 bg-gradient-to-t from-[#07060b] via-[#07060b]/40 to-transparent opacity-90"
+            />
+            <div className="absolute bottom-0 left-0 w-full p-8 md:p-16 flex flex-col md:flex-row md:items-end justify-between gap-6">
+              <div>
+                <span className="text-xs md:text-sm font-heading font-bold uppercase tracking-widest text-[#2bd96b] mb-3 block">
+                  {portfolioProjects[0].category}
+                </span>
+                <h4 className="text-3xl md:text-5xl font-heading font-bold text-[#ece8f5] mb-4">
+                  {portfolioProjects[0].title}
+                </h4>
+                {portfolioProjects[0].description && (
+                  <p className="text-[#8d869c] text-sm md:text-base max-w-lg leading-relaxed">
+                    {portfolioProjects[0].description}
+                  </p>
+                )}
               </div>
-            ))}
+              <a href="#contact" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#2bd96b]/50 transition-all rounded-full text-sm font-semibold uppercase tracking-wider backdrop-blur-md self-start md:self-auto">
+                View Project <ArrowUpRight className="w-4 h-4 text-[#2bd96b]" />
+              </a>
+            </div>
           </div>
         </div>
       </section>
@@ -681,9 +619,8 @@ export default function App() {
               return (
                 <div
                   key={index}
-                  className={`service-row py-10 md:py-14 px-4 md:px-8 transition-all duration-500 grid grid-cols-1 md:grid-cols-12 gap-6 items-center ${
-                    isActive ? 'opacity-100 bg-white/[0.015]' : 'opacity-35 hover:opacity-75'
-                  }`}
+                  className={`service-row py-10 md:py-14 px-4 md:px-8 transition-all duration-500 grid grid-cols-1 md:grid-cols-12 gap-6 items-center ${isActive ? 'opacity-100 bg-white/[0.015]' : 'opacity-35 hover:opacity-75'
+                    }`}
                 >
                   {/* Left Column: Number & Title */}
                   <div className="service-title md:col-span-5 flex items-center gap-6">
@@ -856,9 +793,8 @@ export default function App() {
           <a
             href="#home"
             onClick={(e) => scrollToSection(e, 'home')}
-            className={`flex flex-col items-center justify-center min-w-[52px] sm:min-w-[75px] py-1 sm:py-1.5 px-2 sm:px-3 rounded-full transition-all duration-300 ${
-              activeSection === 'home' ? 'text-[#2bd96b]' : 'text-[#8d869c] hover:text-white'
-            }`}
+            className={`flex flex-col items-center justify-center min-w-[52px] sm:min-w-[75px] py-1 sm:py-1.5 px-2 sm:px-3 rounded-full transition-all duration-300 ${activeSection === 'home' ? 'text-[#2bd96b]' : 'text-[#8d869c] hover:text-white'
+              }`}
           >
             <Zap aria-hidden="true" className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
             <span className="font-heading text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold">
@@ -869,9 +805,8 @@ export default function App() {
           <a
             href="#portfolio"
             onClick={(e) => scrollToSection(e, 'portfolio')}
-            className={`flex flex-col items-center justify-center min-w-[52px] sm:min-w-[75px] py-1 sm:py-1.5 px-2 sm:px-3 rounded-full transition-all duration-300 ${
-              activeSection === 'portfolio' ? 'text-[#2bd96b]' : 'text-[#8d869c] hover:text-white'
-            }`}
+            className={`flex flex-col items-center justify-center min-w-[52px] sm:min-w-[75px] py-1 sm:py-1.5 px-2 sm:px-3 rounded-full transition-all duration-300 ${activeSection === 'portfolio' ? 'text-[#2bd96b]' : 'text-[#8d869c] hover:text-white'
+              }`}
           >
             <LayoutGrid aria-hidden="true" className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
             <span className="font-heading text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold">
@@ -882,9 +817,8 @@ export default function App() {
           <a
             href="#services"
             onClick={(e) => scrollToSection(e, 'services')}
-            className={`flex flex-col items-center justify-center min-w-[52px] sm:min-w-[75px] py-1 sm:py-1.5 px-2 sm:px-3 rounded-full transition-all duration-300 ${
-              activeSection === 'services' ? 'text-[#2bd96b]' : 'text-[#8d869c] hover:text-white'
-            }`}
+            className={`flex flex-col items-center justify-center min-w-[52px] sm:min-w-[75px] py-1 sm:py-1.5 px-2 sm:px-3 rounded-full transition-all duration-300 ${activeSection === 'services' ? 'text-[#2bd96b]' : 'text-[#8d869c] hover:text-white'
+              }`}
           >
             <Terminal aria-hidden="true" className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
             <span className="font-heading text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold">
@@ -895,9 +829,8 @@ export default function App() {
           <a
             href="#results"
             onClick={(e) => scrollToSection(e, 'results')}
-            className={`flex flex-col items-center justify-center min-w-[52px] sm:min-w-[75px] py-1 sm:py-1.5 px-2 sm:px-3 rounded-full transition-all duration-300 ${
-              activeSection === 'results' ? 'text-[#2bd96b]' : 'text-[#8d869c] hover:text-white'
-            }`}
+            className={`flex flex-col items-center justify-center min-w-[52px] sm:min-w-[75px] py-1 sm:py-1.5 px-2 sm:px-3 rounded-full transition-all duration-300 ${activeSection === 'results' ? 'text-[#2bd96b]' : 'text-[#8d869c] hover:text-white'
+              }`}
           >
             <MessageSquare aria-hidden="true" className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
             <span className="font-heading text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold">
