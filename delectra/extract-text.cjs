@@ -85,10 +85,12 @@ async function extractText() {
   return extracted;
 }
 
+const outputFile = process.argv[2] || 'text-after.txt';
+
 extractText().then(items => {
   console.log(`Extracted ${items.length} items`);
-  fs.writeFileSync('text-before.txt', items.join('\n'), 'utf8');
-  console.log('Saved to text-before.txt');
+  fs.writeFileSync(outputFile, items.join('\n'), 'utf8');
+  console.log(`Saved to ${outputFile}`);
 }).catch(err => {
   console.error(err);
   process.exit(1);

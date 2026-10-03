@@ -1,17 +1,18 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Terminal, 
-  LayoutGrid, 
-  Film, 
-  Palette, 
+import React, { useEffect, useRef, useState, useMemo } from 'react';
+import Lenis from 'lenis';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import {
+  Terminal,
+  LayoutGrid,
+  Film,
+  Palette,
   TrendingUp,
   MessageSquare,
   Zap,
   Globe,
-  Star
+  Star,
 } from 'lucide-react';
-import { cn } from './lib/utils';
 import Footer from './components/Footer';
 import SocialsComingSoon from './components/SocialsComingSoon';
 import PrivacyPolicy from './components/PrivacyPolicy';
@@ -21,103 +22,101 @@ import InvertCursor from './components/InvertCursor';
 import SplashScreen from './components/SplashScreen';
 import ContactForm from './components/ContactForm';
 import AdminPanel from './components/AdminPanel';
+import ThreeCurrencyRain from './components/ThreeCurrencyRain';
+import ServiceMarquee from './components/ServiceMarquee';
+import MagneticButton from './components/MagneticButton';
 
+gsap.registerPlugin(ScrollTrigger);
 
+// Project Data
+const portfolioProjects = [
+  {
+    id: 'lumina',
+    title: 'Lumina Cosmetics',
+    category: 'Branding & Web',
+    tag: 'Branding',
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBSPTevSWPZoJ7HrkTS0_k7BHQGPPmdZ2JZcMOvQVEXyghjynP2GlQ-1ql_igzPFtYRNPLrvRkBa5e5ALwUKwWMhXNP4wBFQ147rW3bJSdiXbtfF08k8y7247PGKQhpX-hBVZVhTKi7Vd1MKS9sLg0NZbtD1E0dWkM43EPHARWnHrsWwbVjEpEx9VYUvaHgjE5LV2FcXRSMoiX60JilvSV2VNpZas671dlMfflXlK3jyyPLvR2Tc5QYqvDgj6zyBo9Nc1o58VANOkRt',
+  },
+  {
+    id: 'vortex',
+    title: 'Vortex NFT',
+    category: 'Social Media',
+    tag: 'Web',
+    image:
+      'https://lh3.googleusercontent.com/aida-public/AB6AXuBgZuMbFzEW43jPfGPeWXja0qrDd_bCunDLDNtXHYj35pdFqmVgW3XhdLrl0xNeI8F3pS1KuKph59rLCAPzzg8PUdLCjSaMJAxM6d0CP3tDT2774UnWiBGPAlkWMIbQwrA5_aYMl08Kz95uubve27iwBmytrjKPw-jK_iKxHPv2D8-P9oMCoAO2hc-tslqvtTK0QRhnddwB_42_3jSNkJgguDCaNLeSOaI-123hMXpCACHP-PXvW7EUHqYf57bBtPzewj3MsL8JJKZl',
+  },
+];
 
-// Components
-const GlassCard = ({ children, className, hover = true }: { children: React.ReactNode, className?: string, hover?: boolean }) => (
-  <motion.div 
-    initial={{ opacity: 0, y: 20 }}
-    whileInView={{ opacity: 1, y: 0 }}
-    viewport={{ once: true }}
-    transition={{ duration: 0.6 }}
-    className={cn(
-      "glass-card p-8",
-      hover && "glass-card-hover",
-      className
-    )}
-  >
-    {children}
-  </motion.div>
-);
+// Services Data
+const servicesList = [
+  {
+    number: '01',
+    icon: Terminal,
+    title: 'Web Development',
+    items: ['Custom Website Development', 'Responsive Design', 'Performance Optimization'],
+  },
+  {
+    number: '02',
+    icon: LayoutGrid,
+    title: 'UI/UX Design',
+    items: ['User Interface Design', 'User Experience Optimization', 'Wireframing & Prototyping'],
+  },
+  {
+    number: '03',
+    icon: Palette,
+    title: 'Branding',
+    items: ['Logo Design', 'Brand Identity', 'Visual Guidelines'],
+  },
+  {
+    number: '04',
+    icon: Film,
+    title: 'Video Editing',
+    items: ['Short-form Content Editing', 'Reels & Ads Editing', 'Motion Graphics'],
+  },
+  {
+    number: '05',
+    icon: Palette,
+    title: 'Image Editing',
+    items: ['Social Media Creatives', 'Ad Creatives', 'Retouching'],
+  },
+  {
+    number: '06',
+    icon: TrendingUp,
+    title: 'Social Media',
+    items: ['Content Planning', 'Posting & Scheduling', 'Engagement Handling'],
+  },
+];
 
-const NavItem = ({ href, icon: Icon, label, active = false, onClick }: { href: string, icon: any, label: string, active?: boolean, onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void }) => (
-  <a 
-    href={href}
-    onClick={onClick}
-    className={cn(
-      "flex flex-col items-center justify-center min-w-[85px] py-2 px-3 rounded-full transition-all duration-300 group relative",
-      active ? "text-secondary" : "text-gray-400 hover:text-white"
-    )}
-  >
-    {active && (
-      <motion.div 
-        layoutId="nav-glow"
-        className="absolute inset-0 bg-secondary/10 rounded-full blur-md -z-10"
-        transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-      />
-    )}
-    <Icon className={cn("w-5 h-5 mb-1 group-hover:scale-110 transition-transform", active && "text-secondary")} />
-    <span className="font-heading text-[9px] uppercase tracking-wider font-bold whitespace-nowrap">{label}</span>
-  </a>
-);
+export default function App() {
+  const [showSplash, setShowSplash] = useState(true);
+  const [showSocials, setShowSocials] = useState(false);
+  const [showPrivacy, setShowPrivacy] = useState(false);
+  const [showTerms, setShowTerms] = useState(false);
+  const [showCookies, setShowCookies] = useState(false);
+  const [activeSection, setActiveSection] = useState('home');
+  const [portfolioTab, setPortfolioTab] = useState<'All' | 'Branding' | 'Web'>('All');
+  const [activeServiceRow, setActiveServiceRow] = useState<number>(0);
+  const [isAdminView, setIsAdminView] = useState(window.location.pathname === '/admin');
 
-const CTATypingHeading = () => {
-  const ctaText = "Let's build something great.";
-  const [ctaDisplayText, setCtaDisplayText] = React.useState("");
-  const [ctaStarted, setCtaStarted] = React.useState(false);
-  const ctaRef = React.useRef<HTMLDivElement>(null);
+  // Shared refs for 3D velocity and scroll syncing
+  const scrollVelocityRef = useRef<number>(0);
+  const scrollProgressRef = useRef<number>(0);
+  const lenisRef = useRef<Lenis | null>(null);
 
-  React.useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !ctaStarted) {
-          setCtaStarted(true);
-        }
-      },
-      { threshold: 0.5 }
-    );
-    if (ctaRef.current) observer.observe(ctaRef.current);
-    return () => observer.disconnect();
-  }, [ctaStarted]);
+  // Section Refs for GSAP
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const heroSectionRef = useRef<HTMLElement>(null);
+  const heroLinesRef = useRef<HTMLDivElement>(null);
+  const whyUsRef = useRef<HTMLElement>(null);
+  const servicesRef = useRef<HTMLElement>(null);
+  const portfolioRef = useRef<HTMLElement>(null);
+  const portfolioTrackRef = useRef<HTMLDivElement>(null);
+  const testimonialsRef = useRef<HTMLElement>(null);
+  const contactRef = useRef<HTMLElement>(null);
+  const contactHeadlineRef = useRef<HTMLHeadingElement>(null);
 
-  React.useEffect(() => {
-    if (!ctaStarted) return;
-    setCtaDisplayText("");
-    let i = 0;
-    const timer = setInterval(() => {
-      setCtaDisplayText(ctaText.slice(0, i));
-      i++;
-      if (i > ctaText.length) clearInterval(timer);
-    }, 50);
-    return () => clearInterval(timer);
-  }, [ctaStarted]);
-
-  return (
-    <div ref={ctaRef}>
-      <h2 className="text-6xl md:text-8xl font-heading font-bold mb-12 tracking-tighter leading-tight inline-block text-wave game-optimize">
-        {ctaDisplayText}
-        <span
-          className="inline-block w-[4px] h-[0.8em] bg-secondary ml-1 align-middle cursor-blink game-optimize"
-        />
-      </h2>
-    </div>
-  );
-};
-
-function App() {
-  const fullText = "We build brands that print money.";
-  const [displayText, setDisplayText] = React.useState("");
-  const [isDone, setIsDone] = React.useState(false);
-  const [showSocials, setShowSocials] = React.useState(false);
-  const [showPrivacy, setShowPrivacy] = React.useState(false);
-  const [showTerms, setShowTerms] = React.useState(false);
-  const [showCookies, setShowCookies] = React.useState(false);
-  const [activeSection, setActiveSection] = React.useState("home");
-  const [showSplash, setShowSplash] = React.useState(true);
-  const [isAdminView, setIsAdminView] = React.useState(window.location.pathname === '/admin');
-
-  React.useEffect(() => {
+  useEffect(() => {
     const handleLocationChange = () => {
       setIsAdminView(window.location.pathname === '/admin');
     };
@@ -125,148 +124,325 @@ function App() {
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
 
-  const animationRef = React.useRef<{ cleanup: () => void } | null>(null);
+  // Initialize Lenis Smooth Scroll synced with GSAP
+  useEffect(() => {
+    if (isAdminView) return;
 
-  // Video Game Optimization: Pause off-screen animations
-  React.useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            entry.target.classList.add("in-view");
-          } else {
-            entry.target.classList.remove("in-view");
-          }
-        });
-      },
-      { threshold: 0, rootMargin: "100px" }
-    );
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-    const optimizeElements = document.querySelectorAll(".game-optimize");
-    optimizeElements.forEach((el) => observer.observe(el));
-
-    const mutationObserver = new MutationObserver((mutations) => {
-      mutations.forEach((mutation) => {
-        mutation.addedNodes.forEach((node) => {
-          if (node instanceof HTMLElement) {
-            if (node.classList.contains("game-optimize")) observer.observe(node);
-            node.querySelectorAll(".game-optimize").forEach((child) => observer.observe(child));
-          }
-        });
-      });
+    const lenis = new Lenis({
+      duration: prefersReducedMotion ? 0.01 : 1.2,
+      easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      orientation: 'vertical',
+      gestureOrientation: 'vertical',
+      smoothWheel: !prefersReducedMotion,
     });
-    mutationObserver.observe(document.body, { childList: true, subtree: true });
+    lenisRef.current = lenis;
+
+    lenis.on('scroll', (e: any) => {
+      ScrollTrigger.update();
+      scrollVelocityRef.current = e.velocity || 0;
+      if (typeof e.progress === 'number') {
+        scrollProgressRef.current = e.progress;
+      }
+    });
+
+    const tickerCb = (time: number) => {
+      lenis.raf(time * 1000);
+    };
+
+    gsap.ticker.add(tickerCb);
+    gsap.ticker.lagSmoothing(0);
 
     return () => {
-      observer.disconnect();
-      mutationObserver.disconnect();
+      gsap.ticker.remove(tickerCb);
+      lenis.destroy();
     };
-  }, []);
+  }, [isAdminView]);
 
-  // Scroll spy to update active section
-  React.useEffect(() => {
-    const handleScroll = () => {
-      const sections = ["home", "why-us", "portfolio", "services", "results"];
-      const current = sections.find(section => {
-        const element = document.getElementById(section);
-        if (element) {
-          const rect = element.getBoundingClientRect();
-          return rect.top <= 200 && rect.bottom >= 200;
+  // Master GSAP ScrollTrigger Animations
+  useEffect(() => {
+    if (showSplash || isAdminView) return;
+
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (prefersReducedMotion) return;
+
+    const ctx = gsap.context(() => {
+      // 1. Top Scroll Progress Bar
+      if (progressBarRef.current) {
+        gsap.to(progressBarRef.current, {
+          scaleX: 1,
+          ease: 'none',
+          scrollTrigger: {
+            start: 'top top',
+            end: 'bottom bottom',
+            scrub: true,
+          },
+        });
+      }
+
+      // 2. Hero Lines Slide Up on load & Parallax Out on scroll
+      if (heroLinesRef.current) {
+        gsap.fromTo(
+          heroLinesRef.current.children,
+          { y: 50, opacity: 0 },
+          { y: 0, opacity: 1, duration: 1.1, stagger: 0.15, ease: 'power4.out', delay: 0.1 }
+        );
+
+        gsap.to(heroLinesRef.current, {
+          yPercent: -28,
+          opacity: 0.15,
+          ease: 'none',
+          scrollTrigger: {
+            trigger: heroSectionRef.current,
+            start: 'top top',
+            end: 'bottom top',
+            scrub: true,
+          },
+        });
+      }
+
+      // 3. Why Us Columns rise at different speeds, scrubbed
+      if (whyUsRef.current) {
+        const columns = whyUsRef.current.querySelectorAll('.why-col');
+        const shifts = [40, -25, 55, -15];
+        columns.forEach((col, idx) => {
+          gsap.fromTo(
+            col,
+            { y: shifts[idx] || 20 },
+            {
+              y: -(shifts[idx] || 20),
+              ease: 'none',
+              scrollTrigger: {
+                trigger: whyUsRef.current,
+                start: 'top bottom',
+                end: 'bottom top',
+                scrub: true,
+              },
+            }
+          );
+        });
+      }
+
+      // 4. Services Row Animation: middle of viewport active, titles slide in, bullets stagger
+      if (servicesRef.current) {
+        const rows = servicesRef.current.querySelectorAll('.service-row');
+        rows.forEach((row, i) => {
+          const title = row.querySelector('.service-title');
+          const bullets = row.querySelectorAll('.service-bullet');
+
+          if (title) {
+            gsap.fromTo(
+              title,
+              { x: -35, opacity: 0.2 },
+              {
+                x: 0,
+                opacity: 1,
+                scrollTrigger: {
+                  trigger: row,
+                  start: 'top 85%',
+                  end: 'top 50%',
+                  scrub: true,
+                },
+              }
+            );
+          }
+
+          if (bullets && bullets.length > 0) {
+            gsap.fromTo(
+              bullets,
+              { x: 30, opacity: 0 },
+              {
+                x: 0,
+                opacity: 1,
+                stagger: 0.08,
+                scrollTrigger: {
+                  trigger: row,
+                  start: 'top 80%',
+                  end: 'top 45%',
+                  scrub: true,
+                },
+              }
+            );
+          }
+
+          ScrollTrigger.create({
+            trigger: row,
+            start: 'top 65%',
+            end: 'bottom 35%',
+            onEnter: () => setActiveServiceRow(i),
+            onEnterBack: () => setActiveServiceRow(i),
+          });
+        });
+      }
+
+      // 5. Portfolio Pinned Horizontal Scroll & Frame Skew
+      if (portfolioRef.current && portfolioTrackRef.current) {
+        const track = portfolioTrackRef.current;
+        const totalShift = track.scrollWidth - window.innerWidth + 120;
+
+        if (totalShift > 0 && window.innerWidth >= 768) {
+          gsap.to(track, {
+            x: -totalShift,
+            ease: 'none',
+            scrollTrigger: {
+              trigger: portfolioRef.current,
+              pin: true,
+              start: 'top top',
+              end: () => `+=${totalShift + 300}`,
+              scrub: 1,
+              invalidateOnRefresh: true,
+            },
+          });
         }
-        return false;
-      });
-      if (current && current !== activeSection) {
-        setActiveSection(current);
+      }
+
+      // 6. Testimonial Cards Tilt In & Quote words light up
+      if (testimonialsRef.current) {
+        const cards = testimonialsRef.current.querySelectorAll('.testimonial-card');
+        gsap.fromTo(
+          cards,
+          { rotateY: 10, rotateX: 6, y: 60, opacity: 0.5 },
+          {
+            rotateY: 0,
+            rotateX: 0,
+            y: 0,
+            opacity: 1,
+            stagger: 0.2,
+            duration: 1.2,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: testimonialsRef.current,
+              start: 'top 80%',
+            },
+          }
+        );
+
+        // Quote words light up as you scroll
+        const quotes = testimonialsRef.current.querySelectorAll('.quote-text');
+        quotes.forEach((q) => {
+          gsap.fromTo(
+            q,
+            { '--reveal-pct': '0%' },
+            {
+              '--reveal-pct': '100%',
+              ease: 'none',
+              scrollTrigger: {
+                trigger: q,
+                start: 'top 75%',
+                end: 'bottom 45%',
+                scrub: 1,
+              },
+            }
+          );
+        });
+      }
+
+      // 7. Contact Headline scales in
+      if (contactHeadlineRef.current) {
+        gsap.fromTo(
+          contactHeadlineRef.current,
+          { scale: 0.88, opacity: 0 },
+          {
+            scale: 1,
+            opacity: 1,
+            duration: 1,
+            ease: 'power3.out',
+            scrollTrigger: {
+              trigger: contactRef.current,
+              start: 'top 80%',
+            },
+          }
+        );
+      }
+    });
+
+    return () => ctx.revert();
+  }, [showSplash, isAdminView]);
+
+  // Section scrollspy for nav indicator
+  useEffect(() => {
+    const handleScroll = () => {
+      const sections = ['home', 'why-us', 'portfolio', 'services', 'results', 'connect'];
+      const scrollY = window.scrollY + 300;
+      for (const sectionId of sections) {
+        const el = document.getElementById(sectionId);
+        if (el) {
+          const top = el.offsetTop;
+          const height = el.offsetHeight;
+          if (scrollY >= top && scrollY < top + height) {
+            setActiveSection(sectionId);
+            break;
+          }
+        }
       }
     };
 
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, [activeSection]);
-
-  // Force scroll to top on refresh/mount
-  React.useEffect(() => {
-    if ('scrollRestoration' in window.history) {
-      window.history.scrollRestoration = 'manual';
-    }
-    window.scrollTo({ top: 0, behavior: 'instant' });
-  }, []);
-
-  const startAnimation = React.useCallback(() => {
-    // Clean up any previous animation
-    if (animationRef.current) animationRef.current.cleanup();
-
-    setDisplayText("");
-    setIsDone(false);
-
-    let cancelled = false;
-    let typeTimer: ReturnType<typeof setInterval>;
-
-    let i = 0;
-    typeTimer = setInterval(() => {
-      if (cancelled) { clearInterval(typeTimer); return; }
-      i++;
-      setDisplayText(fullText.slice(0, i));
-      if (i >= fullText.length) {
-        clearInterval(typeTimer);
-        setIsDone(true);
-      }
-    }, 50);
-
-    const cleanup = () => {
-      cancelled = true;
-      if (typeTimer) clearInterval(typeTimer);
-    };
-    animationRef.current = { cleanup };
-    return cleanup;
-  }, [fullText]);
-
-  // Start typing only after splash is done (or immediately if no splash)
-  React.useEffect(() => {
-    if (!showSplash) {
-      const cleanup = startAnimation();
-      return cleanup;
-    }
-  }, [startAnimation, showSplash]);
-
-  // Re-trigger typing when scrolling back to home section from lower sections
-  const prevSectionRef = React.useRef<string>("home");
-  React.useEffect(() => {
-    if (activeSection === "home" && prevSectionRef.current !== "home" && !showSplash) {
-      startAnimation();
-    }
-    prevSectionRef.current = activeSection;
-  }, [activeSection, startAnimation, showSplash]);
-
-  const handleSplashComplete = React.useCallback(() => {
-    setShowSplash(false);
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
     e.preventDefault();
     const element = document.getElementById(id);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth' });
+      if (lenisRef.current) {
+        lenisRef.current.scrollTo(element, { offset: -60, duration: 1.2 });
+      } else {
+        element.scrollIntoView({ behavior: 'smooth' });
+      }
       setActiveSection(id);
     }
   };
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+    window.scrollTo({ top: 0, behavior: 'instant' });
+  };
+
+  const filteredProjects = useMemo(() => {
+    if (portfolioTab === 'All') return portfolioProjects;
+    return portfolioProjects.filter((p) => p.tag === portfolioTab);
+  }, [portfolioTab]);
 
   if (isAdminView) {
     return <AdminPanel />;
   }
 
   return (
-    <div className="relative min-h-screen bg-black overflow-x-hidden selection:bg-secondary/30 selection:text-white">
+    <div className="relative min-h-screen bg-[#07060b] text-[#ece8f5] overflow-x-hidden">
+      {/* Top Scroll Progress Bar */}
+      <div
+        ref={progressBarRef}
+        aria-hidden="true"
+        className="fixed top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-[#c9b2ff] via-[#2bd96b] to-[#2bd96b] z-50 origin-left scale-x-0 pointer-events-none"
+      />
+
+      {/* 3D Raining Currency Canvas */}
+      <ThreeCurrencyRain
+        scrollVelocityRef={scrollVelocityRef}
+        scrollProgressRef={scrollProgressRef}
+      />
+
+      {/* Visual Textures: Grain, Dot Grid, Ambient Glows */}
+      <div aria-hidden="true" className="film-grain" />
+      <div aria-hidden="true" className="dot-grid" />
+      <div aria-hidden="true" className="glow-lavender" />
+      <div aria-hidden="true" className="glow-green" />
+
+      {/* Splash Screen */}
       {showSplash && <SplashScreen onComplete={handleSplashComplete} />}
+
+      {/* Custom Invert Cursor */}
       <InvertCursor />
+
+      {/* Modals */}
       {showSocials && (
-        <SocialsComingSoon 
+        <SocialsComingSoon
           onBack={() => {
             setShowSocials(false);
             window.scrollTo({ top: 0, behavior: 'instant' });
-            startAnimation();
-          }} 
+          }}
         />
       )}
 
@@ -275,7 +451,6 @@ function App() {
           onBack={() => {
             setShowPrivacy(false);
             window.scrollTo({ top: 0, behavior: 'instant' });
-            startAnimation();
           }}
         />
       )}
@@ -285,7 +460,6 @@ function App() {
           onBack={() => {
             setShowTerms(false);
             window.scrollTo({ top: 0, behavior: 'instant' });
-            startAnimation();
           }}
         />
       )}
@@ -295,315 +469,480 @@ function App() {
           onBack={() => {
             setShowCookies(false);
             window.scrollTo({ top: 0, behavior: 'instant' });
-            startAnimation();
           }}
         />
       )}
 
-      {/* Background Orbs */}
-      <div className="fixed top-[-10%] left-[-10%] w-[500px] h-[500px] bg-violet-900/10 blur-[120px] rounded-full pointer-events-none z-0" />
-      <div className="fixed bottom-[10%] right-[-5%] w-[400px] h-[400px] bg-indigo-900/5 blur-[100px] rounded-full pointer-events-none z-0" />
+      {/* =========================================================================
+          HERO SECTION
+      ========================================================================== */}
+      <header
+        id="home"
+        ref={heroSectionRef}
+        className="relative min-h-[92vh] flex flex-col items-center justify-center px-gutter pt-16 pb-12 z-10"
+      >
+        <div ref={heroLinesRef} className="text-center max-w-5xl mx-auto relative w-full">
+          {/* Logo */}
+          <div className="mb-8">
+            <img
+              src="/logo.png"
+              alt="Delectra"
+              className="h-16 md:h-24 mx-auto transition-transform duration-500 hover:scale-105 mix-blend-screen"
+            />
+          </div>
 
-      {/* Hero Section */}
-      <header id="home" className="relative min-h-[90vh] flex flex-col items-center justify-center px-gutter pt-12 z-10">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="text-center max-w-5xl mx-auto relative w-full"
-        >
-          <motion.div 
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="mb-8"
-          >
-            <img src="/logo.png" alt="Delectra" className="h-20 md:h-32 mx-auto transition-transform duration-500 hover:scale-105" />
-          </motion.div>
-
+          {/* Main Headline Container */}
           <div className="relative inline-block mb-6">
-            {/* Floating PNG Badge anchored to Top-Right of Main Text */}
-            <div className="absolute -right-12 sm:-right-24 md:-right-36 lg:-right-44 -top-8 sm:-top-12 md:-top-16 z-20 cursor-pointer pointer-events-auto float-animation game-optimize">
-              <img 
-                src="/hero-badge.png" 
-                alt="Badge" 
-                style={{ transform: 'rotate(15deg)' }}
-                className="w-20 sm:w-28 md:w-36 lg:w-44 h-auto object-contain drop-shadow-[0_10px_25px_rgba(168,85,247,0.35)] transition-all duration-300 ease-out hover:scale-110 hover:drop-shadow-[0_15px_35px_rgba(168,85,247,0.65)]"
+            {/* Cutout Photo placed beside/behind headline */}
+            <img
+              src="/hero.png"
+              alt=""
+              aria-hidden="true"
+              className="absolute right-[-10%] sm:right-[-6%] top-[-25%] w-36 sm:w-56 md:w-72 lg:w-84 h-auto object-contain opacity-25 md:opacity-35 mix-blend-screen pointer-events-none -z-10 select-none filter contrast-125"
+            />
+
+            {/* Floating PNG Badge */}
+            <div className="absolute -right-8 sm:-right-16 md:-right-24 -top-8 sm:-top-12 z-20 cursor-pointer pointer-events-auto float-animation">
+              <img
+                src="/hero-badge.png"
+                alt="Badge"
+                style={{ transform: 'rotate(14deg)' }}
+                className="w-16 sm:w-24 md:w-32 h-auto object-contain drop-shadow-[0_10px_25px_rgba(201,178,255,0.35)] transition-all duration-300 hover:scale-110"
               />
             </div>
 
-            <h1 className="text-5xl md:text-8xl font-heading font-bold leading-[1.0] tracking-tighter inline-block">
-              {displayText.split(" ").slice(0, 4).map((word, i) => (
-                <React.Fragment key={i}>
-                  <span>{word}</span>
-                  {i < 3 && " "}
-                  {i === 3 && <br />}
-                </React.Fragment>
-              ))}
-              <span className="text-gradient">
-                {displayText.split(" ").slice(4).map((word, i) => (
-                  <React.Fragment key={i}>
-                    {i > 0 && " "}
-                    <span>{word}</span>
-                  </React.Fragment>
-                ))}
-              </span>
-              <span
-                className="inline-block w-[4px] h-[0.8em] bg-secondary ml-1 align-middle cursor-blink game-optimize"
-              />
+            <h1 className="text-5xl sm:text-6xl md:text-8xl font-heading font-bold leading-[1.0] tracking-tighter inline-block">
+              <span>We</span>{' '}
+              <span>build</span>{' '}
+              <span>brands</span>{' '}
+              <span>that</span>
+              <br />
+              <span className="accent-serif">print</span>{' '}
+              <span className="accent-serif">money.</span>
             </h1>
           </div>
 
-          <motion.p 
-            initial={{ opacity: 0, y: 10 }}
-            animate={isDone ? { opacity: 1, y: 0 } : { opacity: 0, y: 10 }}
-            transition={{ duration: 0.8 }}
-            className="text-lg md:text-xl text-on-surface-variant max-w-2xl mx-auto mb-8 leading-snug"
-          >
+          {/* Subheading */}
+          <p className="text-base sm:text-lg md:text-xl text-[#8d869c] max-w-2xl mx-auto mb-8 leading-relaxed">
             Strategic design, content, branding, and digital execution focused on one thing — growth.
-          </motion.p>
-
-
-        </motion.div>
-
-
+          </p>
+        </div>
       </header>
 
-      {/* Why Us Section */}
-      <section id="why-us" className="py-16 px-gutter relative z-10">
+      {/* =========================================================================
+          WHY US SECTION (4 columns separated by hairlines, not cards)
+      ========================================================================== */}
+      <section id="why-us" ref={whyUsRef} className="py-24 px-gutter relative z-10 border-t border-white/10">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-heading mb-4 tracking-tighter">Why Us</h2>
-            <div className="w-16 h-1 bg-secondary mx-auto rounded-full" />
+          <div className="text-center mb-16">
+            <h2 className="text-4xl md:text-5xl font-heading font-bold mb-4 tracking-tight">
+              Why Us
+            </h2>
+            <div aria-hidden="true" className="w-12 h-1 bg-[#2bd96b] mx-auto rounded-full" />
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <GlassCard className="p-6 border-t-white/20">
-              <Globe className="w-10 h-10 text-secondary mb-6" />
-              <h3 className="text-2xl font-heading mb-4">Creative + Strategy</h3>
-              <p className="text-on-surface-variant leading-relaxed text-sm">
-                Bold ideas grounded in market-moving data and strategic insights.
-              </p>
-            </GlassCard>
-            <GlassCard className="border-t-white/20">
-              <Zap className="w-10 h-10 text-secondary mb-6" />
-              <h3 className="text-2xl font-heading mb-4">Fast Execution</h3>
-              <p className="text-on-surface-variant leading-relaxed text-sm">
-                Rapid delivery without sacrificing the premium polish your brand deserves.
-              </p>
-            </GlassCard>
-            <GlassCard className="border-t-white/20">
-              <LayoutGrid className="w-10 h-10 text-secondary mb-6" />
-              <h3 className="text-2xl font-heading mb-4">All-in-one</h3>
-              <p className="text-on-surface-variant leading-relaxed text-sm">
-                Seamless integration across design, content, and growth operations.
-              </p>
-            </GlassCard>
-            <GlassCard className="border-t-white/20">
-              <Palette className="w-10 h-10 text-secondary mb-6" />
-              <h3 className="text-2xl font-heading mb-4">Modern Design</h3>
-              <p className="text-on-surface-variant leading-relaxed text-sm">
-                Avant-garde aesthetics tailored for the modern, high-end digital landscape.
-              </p>
-            </GlassCard>
+          <div className="grid grid-cols-1 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-white/10 border-y border-white/10">
+            {/* Col 1 */}
+            <div className="why-col p-8 md:p-10 flex flex-col justify-between">
+              <div>
+                <Globe aria-hidden="true" className="w-8 h-8 text-[#2bd96b] mb-6" />
+                <h3 className="text-xl md:text-2xl font-heading font-bold mb-3 text-[#ece8f5]">
+                  Creative + Strategy
+                </h3>
+                <p className="text-[#8d869c] leading-relaxed text-sm">
+                  Bold ideas grounded in market-moving data and strategic insights.
+                </p>
+              </div>
+            </div>
+
+            {/* Col 2 */}
+            <div className="why-col p-8 md:p-10 flex flex-col justify-between">
+              <div>
+                <Zap aria-hidden="true" className="w-8 h-8 text-[#2bd96b] mb-6" />
+                <h3 className="text-xl md:text-2xl font-heading font-bold mb-3 text-[#ece8f5]">
+                  Fast Execution
+                </h3>
+                <p className="text-[#8d869c] leading-relaxed text-sm">
+                  Rapid delivery without sacrificing the premium polish your brand deserves.
+                </p>
+              </div>
+            </div>
+
+            {/* Col 3 */}
+            <div className="why-col p-8 md:p-10 flex flex-col justify-between">
+              <div>
+                <LayoutGrid aria-hidden="true" className="w-8 h-8 text-[#2bd96b] mb-6" />
+                <h3 className="text-xl md:text-2xl font-heading font-bold mb-3 text-[#ece8f5]">
+                  All-in-one
+                </h3>
+                <p className="text-[#8d869c] leading-relaxed text-sm">
+                  Seamless integration across design, content, and growth operations.
+                </p>
+              </div>
+            </div>
+
+            {/* Col 4 */}
+            <div className="why-col p-8 md:p-10 flex flex-col justify-between">
+              <div>
+                <Palette aria-hidden="true" className="w-8 h-8 text-[#2bd96b] mb-6" />
+                <h3 className="text-xl md:text-2xl font-heading font-bold mb-3 text-[#ece8f5]">
+                  Modern Design
+                </h3>
+                <p className="text-[#8d869c] leading-relaxed text-sm">
+                  Avant-garde aesthetics tailored for the modern, high-end digital landscape.
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* Portfolio Section */}
-      <section id="portfolio" className="py-16 px-gutter bg-[#050505] z-10">
+      {/* =========================================================================
+          SERVICE-NAME MARQUEE (aria-hidden, velocity synced)
+      ========================================================================== */}
+      <ServiceMarquee scrollVelocityRef={scrollVelocityRef} />
+
+      {/* =========================================================================
+          PORTFOLIO SECTION (tabs, then pinned horizontal scroll with large frames)
+      ========================================================================== */}
+      <section
+        id="portfolio"
+        ref={portfolioRef}
+        className="py-24 px-gutter relative z-10 bg-[#07060b]/90 overflow-hidden"
+      >
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+          {/* Header & Tabs */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-end mb-16 gap-6">
             <div className="max-w-xl">
-              <h2 className="text-4xl md:text-5xl font-heading mb-4 tracking-tighter">Portfolio</h2>
-              <p className="text-on-surface-variant text-base">Visionary works for brands that demand excellence.</p>
+              <h2 className="text-4xl md:text-5xl font-heading font-bold mb-3 tracking-tight">
+                Portfolio
+              </h2>
+              <p className="text-[#8d869c] text-base">
+                Visionary works for brands that demand excellence.
+              </p>
             </div>
+
             <div className="flex gap-6 border-b border-white/10 pb-1">
-              <span className="font-heading text-xs uppercase tracking-widest text-secondary cursor-pointer border-b-2 border-secondary pb-1">All</span>
-              <span className="font-heading text-xs uppercase tracking-widest text-on-surface-variant hover:text-white cursor-pointer transition-colors pb-1">Branding</span>
-              <span className="font-heading text-xs uppercase tracking-widest text-on-surface-variant hover:text-white cursor-pointer transition-colors pb-1">Web</span>
+              {(['All', 'Branding', 'Web'] as const).map((tab) => (
+                <span
+                  key={tab}
+                  onClick={() => setPortfolioTab(tab)}
+                  className={`font-heading text-xs uppercase tracking-widest cursor-pointer transition-colors pb-1 ${
+                    portfolioTab === tab
+                      ? 'text-[#2bd96b] border-b-2 border-[#2bd96b]'
+                      : 'text-[#8d869c] hover:text-[#ece8f5]'
+                  }`}
+                >
+                  {tab}
+                </span>
+              ))}
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-            <motion.div 
-              whileHover={{ y: -10 }}
-              className="md:col-span-8 group cursor-pointer relative overflow-hidden rounded-[2rem] h-[500px]"
-            >
-              <img 
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSPTevSWPZoJ7HrkTS0_k7BHQGPPmdZ2JZcMOvQVEXyghjynP2GlQ-1ql_igzPFtYRNPLrvRkBa5e5ALwUKwWMhXNP4wBFQ147rW3bJSdiXbtfF08k8y7247PGKQhpX-hBVZVhTKi7Vd1MKS9sLg0NZbtD1E0dWkM43EPHARWnHrsWwbVjEpEx9VYUvaHgjE5LV2FcXRSMoiX60JilvSV2VNpZas671dlMfflXlK3jyyPLvR2Tc5QYqvDgj6zyBo9Nc1o58VANOkRt" 
-                alt="Lumina Cosmetics"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
-              <div className="absolute bottom-0 left-0 p-12">
-                <span className="text-[10px] font-heading font-bold uppercase tracking-widest text-secondary mb-3 block">Branding & Web</span>
-                <h4 className="text-3xl md:text-4xl font-heading font-bold">Lumina Cosmetics</h4>
-              </div>
-            </motion.div>
-
-            <motion.div 
-              whileHover={{ y: -10 }}
-              className="md:col-span-4 group cursor-pointer relative overflow-hidden rounded-[2rem] h-[500px]"
-            >
-              <img 
-                className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBgZuMbFzEW43jPfGPeWXja0qrDd_bCunDLDNtXHYj35pdFqmVgW3XhdLrl0xNeI8F3pS1KuKph59rLCAPzzg8PUdLCjSaMJAxM6d0CP3tDT2774UnWiBGPAlkWMIbQwrA5_aYMl08Kz95uubve27iwBmytrjKPw-jK_iKxHPv2D8-P9oMCoAO2hc-tslqvtTK0QRhnddwB_42_3jSNkJgguDCaNLeSOaI-123hMXpCACHP-PXvW7EUHqYf57bBtPzewj3MsL8JJKZl" 
-                alt="Vortex NFT"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent opacity-80" />
-              <div className="absolute bottom-0 left-0 p-10">
-                <span className="text-[10px] font-heading font-bold uppercase tracking-widest text-secondary mb-3 block">Social Media</span>
-                <h4 className="text-2xl md:text-3xl font-heading font-bold">Vortex NFT</h4>
-              </div>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Services Detail Section */}
-      <section id="services" className="py-16 px-gutter z-10">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl md:text-5xl font-heading mb-4 tracking-tighter">Our Services</h2>
-            <p className="text-on-surface-variant text-base">Elite solutions for your brand's evolution.</p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[
-              { icon: Terminal, title: "Web Development", items: ["Custom Website Development", "Responsive Design", "Performance Optimization"] },
-              { icon: LayoutGrid, title: "UI/UX Design", items: ["User Interface Design", "User Experience Optimization", "Wireframing & Prototyping"] },
-              { icon: Palette, title: "Branding", items: ["Logo Design", "Brand Identity", "Visual Guidelines"] },
-              { icon: Film, title: "Video Editing", items: ["Short-form Content Editing", "Reels & Ads Editing", "Motion Graphics"] },
-              { icon: Palette, title: "Image Editing", items: ["Social Media Creatives", "Ad Creatives", "Retouching"] },
-              { icon: TrendingUp, title: "Social Media", items: ["Content Planning", "Posting & Scheduling", "Engagement Handling"] }
-            ].map((service, i) => (
-              <GlassCard key={i} className="border-l-4 border-l-secondary flex flex-col h-full">
-                <div className="flex items-center gap-4 mb-8">
-                  <service.icon className="w-8 h-8 text-secondary" />
-                  <h3 className="text-2xl font-heading">{service.title}</h3>
+          {/* Horizontal Track Container */}
+          <div
+            ref={portfolioTrackRef}
+            className="portfolio-track flex gap-8 pb-4 items-stretch select-none"
+          >
+            {filteredProjects.map((project) => (
+              <div
+                key={project.id}
+                className="portfolio-frame w-[85vw] sm:w-[500px] md:w-[620px] shrink-0 group relative overflow-hidden rounded-[2rem] h-[480px] border border-white/10 bg-[#0e0d14]/70"
+              >
+                <img
+                  src={project.image}
+                  alt={project.title}
+                  className="w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
+                />
+                <div
+                  aria-hidden="true"
+                  className="absolute inset-0 bg-gradient-to-t from-[#07060b] via-[#07060b]/30 to-transparent opacity-85"
+                />
+                <div className="absolute bottom-0 left-0 p-8 md:p-12">
+                  <span className="text-[10px] font-heading font-bold uppercase tracking-widest text-[#2bd96b] mb-2 block">
+                    {project.category}
+                  </span>
+                  <h4 className="text-2xl md:text-4xl font-heading font-bold text-[#ece8f5]">
+                    {project.title}
+                  </h4>
                 </div>
-                <ul className="space-y-4 mb-4 flex-grow">
-                  {service.items.map((item, j) => (
-                    <li key={j} className="flex items-center gap-3 text-on-surface-variant">
-                      <div className="w-1.5 h-1.5 bg-secondary rounded-full" />
-                      {item}
-                    </li>
-                  ))}
-                </ul>
-              </GlassCard>
+              </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section id="results" className="py-stack-lg px-gutter bg-[#080808] z-10">
+      {/* =========================================================================
+          OUR SERVICES (6 numbered rows: title left, bullets right)
+      ========================================================================== */}
+      <section id="services" ref={servicesRef} className="py-28 px-gutter relative z-10 border-t border-white/10">
         <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl md:text-6xl font-heading mb-6 tracking-tighter">What Our Clients Say</h2>
-            <p className="text-on-surface-variant text-lg">Real feedback from the people we've worked with.</p>
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-5xl font-heading font-bold mb-3 tracking-tight">
+              Our Services
+            </h2>
+            <p className="text-[#8d869c] text-base">Elite solutions for your brand's evolution.</p>
+          </div>
+
+          <div className="divide-y divide-white/10 border-y border-white/10">
+            {servicesList.map((service, index) => {
+              const isActive = activeServiceRow === index;
+              return (
+                <div
+                  key={index}
+                  className={`service-row py-10 md:py-14 px-4 md:px-8 transition-all duration-500 grid grid-cols-1 md:grid-cols-12 gap-6 items-center ${
+                    isActive ? 'opacity-100 bg-white/[0.015]' : 'opacity-35 hover:opacity-75'
+                  }`}
+                >
+                  {/* Left Column: Number & Title */}
+                  <div className="service-title md:col-span-5 flex items-center gap-6">
+                    <span
+                      aria-hidden="true"
+                      className="font-serif italic text-2xl md:text-3xl text-[#c9b2ff]/60 select-none shrink-0"
+                    >
+                      {service.number}
+                    </span>
+                    <div className="flex items-center gap-4">
+                      <service.icon
+                        aria-hidden="true"
+                        className="w-6 h-6 md:w-7 md:h-7 text-[#2bd96b] shrink-0"
+                      />
+                      <h3 className="text-2xl md:text-3xl font-heading font-bold text-[#ece8f5]">
+                        {service.title}
+                      </h3>
+                    </div>
+                  </div>
+
+                  {/* Right Column: Bullets */}
+                  <div className="md:col-span-7 flex flex-wrap md:justify-end gap-3 md:gap-4">
+                    {service.items.map((item, j) => (
+                      <div
+                        key={j}
+                        className="service-bullet px-4 py-2 rounded-full border border-white/10 bg-white/[0.02] text-xs md:text-sm text-[#8d869c] flex items-center gap-2"
+                      >
+                        <div
+                          aria-hidden="true"
+                          className="w-1.5 h-1.5 rounded-full bg-[#2bd96b]"
+                        />
+                        <span>{item}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </section>
+
+      {/* =========================================================================
+          WHAT OUR CLIENTS SAY (two quotes side by side, words light up as you scroll)
+      ========================================================================== */}
+      <section
+        id="results"
+        ref={testimonialsRef}
+        className="py-32 px-gutter relative z-10 border-t border-white/10 bg-[#07060b]/80"
+      >
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-20">
+            <h2 className="text-4xl md:text-6xl font-heading font-bold mb-4 tracking-tight">
+              What Our Clients Say
+            </h2>
+            <p className="text-[#8d869c] text-lg">Real feedback from the people we've worked with.</p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-            {[
-              { quote: "They understood our vision from day one and turned it into a website that truly represents Drriftaire. Clean, fast, and exactly what we needed to stand out.", author: "Sunit Giria", role: "Co-founder, Drriftaire" },
-              { quote: "Professional, responsive, and incredibly detail-oriented. The final product exceeded what we had in mind — our website now speaks for itself.", author: "Saket Goenka", role: "Co-founder, Drriftaire" }
-            ].map((t, i) => (
-              <GlassCard key={i} className="flex flex-col justify-between border-t-2 border-t-secondary/30">
-                <div className="mb-8">
-                  <div className="flex gap-2 mb-6">
-                    {[...Array(5)].map((_, j) => (
-                      <motion.div
-                        key={j}
-                        initial={{ opacity: 0, scale: 0, rotate: -90 }}
-                        whileInView={{ opacity: 1, scale: 1, rotate: 0 }}
-                        viewport={{ once: true }}
-                        transition={{ 
-                          delay: 0.15 * j,
-                          duration: 0.4,
-                          ease: "backOut"
-                        }}
-                      >
-                        <div
-                          className="star-glow game-optimize"
-                          style={{ animationDelay: `${0.3 * j}s` }}
-                        >
-                          <Star className="w-4 h-4 text-secondary fill-secondary" />
-                        </div>
-                      </motion.div>
-                    ))}
-                  </div>
-                  <p className="text-lg md:text-xl text-on-surface leading-relaxed tracking-tight">"{t.quote}"</p>
+            {/* Testimonial 1 */}
+            <div className="testimonial-card glass-card p-8 md:p-12 flex flex-col justify-between border-t border-t-[#2bd96b]/40 relative overflow-hidden bg-[#0e0d14]/70">
+              <div className="mb-8">
+                {/* 5 Stars */}
+                <div aria-hidden="true" className="flex gap-1.5 mb-6 text-[#2bd96b]">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-current text-[#2bd96b]" />
+                  ))}
                 </div>
-                <div className="flex items-center gap-4 pt-6 border-t border-white/5">
-                  <div className="w-10 h-10 rounded-full bg-secondary/10 border border-secondary/20 flex items-center justify-center">
-                    <span className="font-heading text-sm font-bold text-secondary">{t.author.charAt(0)}</span>
-                  </div>
-                  <div>
-                    <h5 className="text-base font-heading font-bold text-white">{t.author}</h5>
-                    <p className="text-[10px] font-heading font-bold uppercase tracking-widest text-secondary/70 mt-0.5">{t.role}</p>
-                  </div>
+
+                <p className="quote-text text-lg md:text-xl text-[#ece8f5] leading-relaxed tracking-tight" style={{ '--reveal-pct': '0%' } as React.CSSProperties}>
+                  "{"They understood our vision from day one and turned it into a website that truly represents Drriftaire. Clean, fast, and exactly what we needed to stand out."}"
+                </p>
+              </div>
+
+              <div className="flex items-center gap-4 pt-6 border-t border-white/10">
+                <div className="w-10 h-10 rounded-full bg-[#2bd96b]/10 border border-[#2bd96b]/30 flex items-center justify-center">
+                  <span className="font-heading text-sm font-bold text-[#2bd96b]">S</span>
                 </div>
-              </GlassCard>
-            ))}
+                <div>
+                  <h5 className="text-base font-heading font-bold text-white">Sunit Giria</h5>
+                  <p className="text-[10px] font-heading font-semibold uppercase tracking-widest text-[#8d869c] mt-0.5">
+                    Co-founder, Drriftaire
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial 2 */}
+            <div className="testimonial-card glass-card p-8 md:p-12 flex flex-col justify-between border-t border-t-[#2bd96b]/40 relative overflow-hidden bg-[#0e0d14]/70">
+              <div className="mb-8">
+                {/* 5 Stars */}
+                <div aria-hidden="true" className="flex gap-1.5 mb-6 text-[#2bd96b]">
+                  {[...Array(5)].map((_, i) => (
+                    <Star key={i} className="w-4 h-4 fill-current text-[#2bd96b]" />
+                  ))}
+                </div>
+
+                <p className="quote-text text-lg md:text-xl text-[#ece8f5] leading-relaxed tracking-tight" style={{ '--reveal-pct': '0%' } as React.CSSProperties}>
+                  "{"Professional, responsive, and incredibly detail-oriented. The final product exceeded what we had in mind — our website now speaks for itself."}"
+                </p>
+              </div>
+
+              <div className="flex items-center gap-4 pt-6 border-t border-white/10">
+                <div className="w-10 h-10 rounded-full bg-[#2bd96b]/10 border border-[#2bd96b]/30 flex items-center justify-center">
+                  <span className="font-heading text-sm font-bold text-[#2bd96b]">S</span>
+                </div>
+                <div>
+                  <h5 className="text-base font-heading font-bold text-white">Saket Goenka</h5>
+                  <p className="text-[10px] font-heading font-semibold uppercase tracking-widest text-[#8d869c] mt-0.5">
+                    Co-founder, Drriftaire
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section id="connect" className="py-32 px-gutter relative overflow-hidden z-10">
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-violet-900/5 blur-[150px] rounded-full pointer-events-none" />
-        <div className="max-w-4xl mx-auto text-center">
-          <CTATypingHeading />
-          
-          <motion.a 
-            whileHover={{ scale: 1.05 }}
-            whileTap={{ scale: 0.95 }}
-            href="https://wa.me/917980228396?text=Hey%20Nikunj%2C%20I%20wanna%20have%20a%20quick%20chat%20about%20your%20services%20got%20a%20minute%3F"
-            className="inline-flex items-center gap-4 bg-[#25D366] text-black px-12 py-6 rounded-full font-heading font-bold uppercase tracking-widest text-sm hover:shadow-[0_0_40px_rgba(37,211,102,0.4)] transition-all duration-300 mb-16"
-          >
-            <MessageSquare className="w-6 h-6 fill-black" />
-            Start on WhatsApp
-          </motion.a>
+      {/* =========================================================================
+          CONTACT SECTION (headline & magnetic WhatsApp on left, form on right)
+      ========================================================================== */}
+      <section
+        id="connect"
+        ref={contactRef}
+        className="py-32 px-gutter relative overflow-hidden z-10 border-t border-white/10"
+      >
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-16 items-start">
+          {/* Left Column: Big Headline & WhatsApp Button */}
+          <div className="lg:col-span-5 flex flex-col items-start pt-6">
+            <h2
+              ref={contactHeadlineRef}
+              className="text-5xl sm:text-6xl md:text-7xl font-heading font-bold tracking-tighter leading-[1.05] mb-12 text-[#ece8f5]"
+            >
+              Let's build something great.
+            </h2>
 
-          <ContactForm />
+            <MagneticButton
+              href="https://wa.me/917980228396?text=Hey%20Nikunj%2C%20I%20wanna%20have%20a%20quick%20chat%20about%20your%20services%20got%20a%20minute%3F"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-4 bg-[#2bd96b] hover:bg-[#25c460] text-[#07060b] px-10 py-5 rounded-full font-heading font-bold uppercase tracking-widest text-xs transition-all duration-300 shadow-[0_10px_35px_rgba(43,217,107,0.35)] cursor-pointer"
+            >
+              <MessageSquare aria-hidden="true" className="w-5 h-5 fill-current" />
+              <span>Start on WhatsApp</span>
+            </MagneticButton>
+          </div>
+
+          {/* Right Column: Form Panel */}
+          <div className="lg:col-span-7 w-full">
+            <ContactForm />
+          </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <Footer onSocialClick={() => setShowSocials(true)} onPrivacyClick={() => setShowPrivacy(true)} onTermsClick={() => setShowTerms(true)} onCookiesClick={() => setShowCookies(true)} />
+      {/* =========================================================================
+          4-COLUMN FOOTER (with giant outlined wordmark)
+      ========================================================================== */}
+      <Footer
+        onSocialClick={() => setShowSocials(true)}
+        onPrivacyClick={() => setShowPrivacy(true)}
+        onTermsClick={() => setShowTerms(true)}
+        onCookiesClick={() => setShowCookies(true)}
+      />
 
-      {/* Floating Navigation */}
-      <nav className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 flex items-center p-1.5 bg-black/60 backdrop-blur-2xl rounded-full border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
-        <div className="flex items-center gap-1">
-          <NavItem href="#home" icon={Zap} label="Home" active={activeSection === "home"} onClick={(e) => scrollToSection(e, "home")} />
-          <NavItem href="#portfolio" icon={LayoutGrid} label="Portfolio" active={activeSection === "portfolio"} onClick={(e) => scrollToSection(e, "portfolio")} />
-          <NavItem href="#services" icon={Terminal} label="Services" active={activeSection === "services"} onClick={(e) => scrollToSection(e, "services")} />
-          <NavItem href="#results" icon={MessageSquare} label="Testimonials" active={activeSection === "results"} onClick={(e) => scrollToSection(e, "results")} />
-        </div>
-        
-        <div className="flex items-center gap-4 border-l border-white/10 ml-2 pl-4 pr-4">
-          <motion.a 
-            href="#connect"
-            onClick={(e: any) => scrollToSection(e, "connect")}
-            whileHover={{ scale: 1.02 }}
-            whileTap={{ scale: 0.98 }}
-            className="flex items-center gap-2 bg-secondary text-black px-5 py-2.5 rounded-full text-[13px] font-bold transition-shadow hover:shadow-[0_0_20px_rgba(221,183,255,0.4)]"
+      {/* =========================================================================
+          FLOATING GLASS PILL NAVIGATION (rendered at DOM end matching order)
+      ========================================================================== */}
+      <nav className="fixed bottom-4 sm:bottom-8 left-1/2 -translate-x-1/2 z-40 flex items-center p-1 sm:p-1.5 glass-pill rounded-full max-w-[96vw] overflow-x-auto no-scrollbar">
+        <div className="flex items-center gap-0.5 sm:gap-1">
+          <a
+            href="#home"
+            onClick={(e) => scrollToSection(e, 'home')}
+            className={`flex flex-col items-center justify-center min-w-[52px] sm:min-w-[75px] py-1 sm:py-1.5 px-2 sm:px-3 rounded-full transition-all duration-300 ${
+              activeSection === 'home' ? 'text-[#2bd96b]' : 'text-[#8d869c] hover:text-white'
+            }`}
           >
-            Let's Connect
-            <div className="w-5 h-5 rounded-full bg-black/20 flex items-center justify-center">
-              <Zap className="w-3 h-3 fill-current" />
+            <Zap aria-hidden="true" className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
+            <span className="font-heading text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold">
+              Home
+            </span>
+          </a>
+
+          <a
+            href="#portfolio"
+            onClick={(e) => scrollToSection(e, 'portfolio')}
+            className={`flex flex-col items-center justify-center min-w-[52px] sm:min-w-[75px] py-1 sm:py-1.5 px-2 sm:px-3 rounded-full transition-all duration-300 ${
+              activeSection === 'portfolio' ? 'text-[#2bd96b]' : 'text-[#8d869c] hover:text-white'
+            }`}
+          >
+            <LayoutGrid aria-hidden="true" className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
+            <span className="font-heading text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold">
+              Portfolio
+            </span>
+          </a>
+
+          <a
+            href="#services"
+            onClick={(e) => scrollToSection(e, 'services')}
+            className={`flex flex-col items-center justify-center min-w-[52px] sm:min-w-[75px] py-1 sm:py-1.5 px-2 sm:px-3 rounded-full transition-all duration-300 ${
+              activeSection === 'services' ? 'text-[#2bd96b]' : 'text-[#8d869c] hover:text-white'
+            }`}
+          >
+            <Terminal aria-hidden="true" className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
+            <span className="font-heading text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold">
+              Services
+            </span>
+          </a>
+
+          <a
+            href="#results"
+            onClick={(e) => scrollToSection(e, 'results')}
+            className={`flex flex-col items-center justify-center min-w-[52px] sm:min-w-[75px] py-1 sm:py-1.5 px-2 sm:px-3 rounded-full transition-all duration-300 ${
+              activeSection === 'results' ? 'text-[#2bd96b]' : 'text-[#8d869c] hover:text-white'
+            }`}
+          >
+            <MessageSquare aria-hidden="true" className="w-3.5 h-3.5 sm:w-4 sm:h-4 mb-0.5" />
+            <span className="font-heading text-[8px] sm:text-[9px] uppercase tracking-wider font-semibold">
+              Testimonials
+            </span>
+          </a>
+        </div>
+
+        <div className="flex items-center gap-1.5 sm:gap-3 border-l border-white/10 ml-1 sm:ml-2 pl-2 sm:pl-3 pr-1 sm:pr-2">
+          <a
+            href="#connect"
+            onClick={(e) => scrollToSection(e, 'connect')}
+            className="flex items-center gap-1 sm:gap-2 bg-[#2bd96b] text-[#07060b] px-2.5 sm:px-4 py-1.5 sm:py-2 rounded-full text-[11px] sm:text-xs font-bold transition-all hover:bg-[#25c460] whitespace-nowrap"
+          >
+            <span>Let's Connect</span>
+            <div
+              aria-hidden="true"
+              className="w-3.5 h-3.5 sm:w-4 sm:h-4 rounded-full bg-[#07060b]/20 flex items-center justify-center"
+            >
+              <Zap className="w-2 h-2 sm:w-2.5 sm:h-2.5 fill-current" />
             </div>
-          </motion.a>
-          
-          <a href="https://wa.me/917980228396?text=Hey%20Nikunj%2C%20I%20wanna%20have%20a%20quick%20chat%20about%20your%20services%20got%20a%20minute%3F" target="_blank" rel="noopener noreferrer" className="text-secondary hover:scale-110 transition-transform flex items-center justify-center">
-            <svg 
-              className="w-7 h-7 fill-current" 
-              viewBox="0 0 24 24" 
+          </a>
+
+          <a
+            href="https://wa.me/917980228396?text=Hey%20Nikunj%2C%20I%20wanna%20have%20a%20quick%20chat%20about%20your%20services%20got%20a%20minute%3F"
+            target="_blank"
+            rel="noopener noreferrer"
+            aria-hidden="true"
+            className="text-[#2bd96b] hover:scale-110 transition-transform flex items-center justify-center p-1"
+          >
+            <svg
+              className="w-5 h-5 sm:w-6 sm:h-6 fill-current"
+              viewBox="0 0 24 24"
               xmlns="http://www.w3.org/2000/svg"
             >
-              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.94 3.659 1.437 5.63 1.438h.004c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+              <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L0 24l6.335-1.662c1.72.94 3.659 1.437 5.63 1.438h.004c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z" />
             </svg>
           </a>
         </div>
@@ -611,5 +950,3 @@ function App() {
     </div>
   );
 }
-
-export default App;
