@@ -178,6 +178,24 @@
   scrollbar-width: none;
 }
 
+/* Floating animation for badge/stickers */
+@keyframes seamless-float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-16px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.float-animation {
+  animation: seamless-float 4s ease-in-out infinite;
+  will-change: transform;
+}
+
 /* Reduced motion support */
 @media (prefers-reduced-motion: reduce) {
   * {

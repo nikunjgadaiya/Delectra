@@ -183,13 +183,14 @@ export default function App() {
 
       // 2. Hero Lines Slide Up on load & Parallax Out on scroll
       if (heroLinesRef.current) {
+        const textElements = heroLinesRef.current.querySelectorAll('.hero-anim-item');
         gsap.fromTo(
-          heroLinesRef.current.children,
+          textElements,
           { y: 50, opacity: 0 },
           { y: 0, opacity: 1, duration: 1.1, stagger: 0.15, ease: 'power4.out', delay: 0.1 }
         );
 
-        gsap.to(heroLinesRef.current, {
+        gsap.to(textElements, {
           yPercent: -28,
           opacity: 0.15,
           ease: 'none',
@@ -424,9 +425,7 @@ export default function App() {
         scrollProgressRef={scrollProgressRef}
       />
 
-      {/* Visual Textures: Grain, Dot Grid, Ambient Glows */}
-      <div aria-hidden="true" className="film-grain" />
-      <div aria-hidden="true" className="dot-grid" />
+      {/* Visual Textures: Ambient Glows */}
       <div aria-hidden="true" className="glow-lavender" />
       <div aria-hidden="true" className="glow-green" />
 
@@ -483,7 +482,7 @@ export default function App() {
       >
         <div ref={heroLinesRef} className="text-center max-w-5xl mx-auto relative w-full">
           {/* Logo */}
-          <div className="mb-8">
+          <div className="mb-8 hero-anim-item">
             <img
               src="/logo.png"
               alt="Delectra"
@@ -493,25 +492,17 @@ export default function App() {
 
           {/* Main Headline Container */}
           <div className="relative inline-block mb-6">
-            {/* Cutout Photo placed beside/behind headline */}
-            <img
-              src="/hero.png"
-              alt=""
-              aria-hidden="true"
-              className="absolute right-[-10%] sm:right-[-6%] top-[-25%] w-36 sm:w-56 md:w-72 lg:w-84 h-auto object-contain opacity-25 md:opacity-35 mix-blend-screen pointer-events-none -z-10 select-none filter contrast-125"
-            />
-
-            {/* Floating PNG Badge */}
-            <div className="absolute -right-8 sm:-right-16 md:-right-24 -top-8 sm:-top-12 z-20 cursor-pointer pointer-events-auto float-animation">
+            {/* Floating PNG Badge - Independent Floating Element */}
+            <div className="absolute -right-10 sm:-right-20 md:-right-32 lg:-right-40 -top-8 sm:-top-12 md:-top-16 z-20 cursor-pointer pointer-events-auto float-animation">
               <img
                 src="/hero-badge.png"
                 alt="Badge"
-                style={{ transform: 'rotate(14deg)' }}
-                className="w-16 sm:w-24 md:w-32 h-auto object-contain drop-shadow-[0_10px_25px_rgba(201,178,255,0.35)] transition-all duration-300 hover:scale-110"
+                style={{ transform: 'rotate(15deg)' }}
+                className="w-20 sm:w-28 md:w-36 lg:w-44 h-auto object-contain drop-shadow-[0_10px_25px_rgba(201,178,255,0.35)] transition-all duration-300 ease-out hover:scale-110 hover:drop-shadow-[0_15px_35px_rgba(201,178,255,0.65)]"
               />
             </div>
 
-            <h1 className="text-5xl sm:text-6xl md:text-8xl font-heading font-bold leading-[1.0] tracking-tighter inline-block">
+            <h1 className="hero-anim-item text-5xl sm:text-6xl md:text-8xl font-heading font-bold leading-[1.0] tracking-tighter inline-block">
               <span>We</span>{' '}
               <span>build</span>{' '}
               <span>brands</span>{' '}
@@ -523,7 +514,7 @@ export default function App() {
           </div>
 
           {/* Subheading */}
-          <p className="text-base sm:text-lg md:text-xl text-[#8d869c] max-w-2xl mx-auto mb-8 leading-relaxed">
+          <p className="hero-anim-item text-base sm:text-lg md:text-xl text-[#8d869c] max-w-2xl mx-auto mb-8 leading-relaxed">
             Strategic design, content, branding, and digital execution focused on one thing — growth.
           </p>
         </div>

@@ -18,10 +18,10 @@ export default function ThreeCurrencyRain({ scrollVelocityRef, scrollProgressRef
 
     const canvas = canvasRef.current;
     const isMobile = window.innerWidth < 768;
-    const symbolCount = isMobile ? 14 : 32;
+    const symbolCount = isMobile ? 36 : 80;
 
     const scene = new THREE.Scene();
-    scene.fog = new THREE.Fog('#07060b', 3, 11);
+    scene.fog = new THREE.Fog('#07060b', 3, 14);
 
     const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.1, 50);
     camera.position.set(0, 0, 7.5);
@@ -37,25 +37,29 @@ export default function ThreeCurrencyRain({ scrollVelocityRef, scrollProgressRef
     renderer.setPixelRatio(pixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    // Lights
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
+    // Lights - brighter and clearer
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 0.9);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
     dirLight.position.set(5, 12, 6);
     scene.add(dirLight);
 
-    const greenPointLight = new THREE.PointLight(new THREE.Color('#2bd96b'), 3.5, 30);
+    const rimLight = new THREE.DirectionalLight(new THREE.Color('#c9b2ff'), 0.5);
+    rimLight.position.set(-6, -4, -4);
+    scene.add(rimLight);
+
+    const greenPointLight = new THREE.PointLight(new THREE.Color('#2bd96b'), 4.2, 35);
     greenPointLight.position.set(0, 3, 4);
     scene.add(greenPointLight);
 
     // Material
     const material = new THREE.MeshStandardMaterial({
       color: new THREE.Color('#2bd96b'),
-      metalness: 0.88,
-      roughness: 0.2,
-      emissive: new THREE.Color('#0d4621'),
-      emissiveIntensity: 0.35,
+      metalness: 0.8,
+      roughness: 0.22,
+      emissive: new THREE.Color('#12532a'),
+      emissiveIntensity: 0.4,
     });
 
     // Create extruded geometries from SVG paths for $ and ₹
@@ -67,20 +71,12 @@ export default function ThreeCurrencyRain({ scrollVelocityRef, scrollProgressRef
       </svg>
     `;
 
+    // Authentic Indian Rupee symbol (₹)
     const rupeeSvg = `
-      <svg viewBox="0 0 100 120" xmlns="http://www.w3.org/2000/svg">
-        <path d="M22,15 L78,15 L78,27 L53,27 C63,32 68,40 68,51 L78,51 L78,63 L67,63 C63,80 48,93 25,96 L25,84 C40,81 51,72 52,63 L22,63 L22,51 L52,51 C51,38 41,27 26,27 L22,27 Z M45,63 L80,115 L62,115 L32,68 Z"/>
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 512">
+        <path d="M0 64C0 46.3 14.3 32 32 32H96h16H288c17.7 0 32 14.3 32 32s-14.3 32-32 32H231.8c9.6 14.4 16.7 30.6 20.7 48H288c17.7 0 32 14.3 32 32s-14.3 32-32 32H252.4c-13.2 58.3-61.9 103.2-122.2 110.9L274.6 422c14.4 10.3 17.7 30.3 7.4 44.6s-30.3 17.7-44.6 7.4L13.4 314C2.1 306-2.7 291.5 1.5 278.2S18.1 256 32 256H116.8c38.9 0 72.9-25.7 84.1-64H32c-17.7 0-32-14.3-32-32s14.3-32 32-32H200.9c-3.6-12.7-10.7-24.1-20.3-32H32c-17.7 0-32-14.3-32-32z"/>
       </svg>
     `;
-
-    const extrudeSettings: THREE.ExtrudeGeometryOptions = {
-      depth: 6,
-      bevelEnabled: true,
-      bevelThickness: 1.5,
-      bevelSize: 1.2,
-      bevelSegments: 3,
-      steps: 1,
-    };
 
     const dData = loader.parse(dollarSvg);
     const rData = loader.parse(rupeeSvg);
@@ -88,14 +84,36 @@ export default function ThreeCurrencyRain({ scrollVelocityRef, scrollProgressRef
     const dShapes = SVGLoader.createShapes(dData.paths[0]);
     const rShapes = SVGLoader.createShapes(rData.paths[0]);
 
-    const dGeom = new THREE.ExtrudeGeometry(dShapes, extrudeSettings);
-    dGeom.center();
-    dGeom.scale(0.012, -0.012, 0.012);
+    // Dollar geometry
+    const dGeom = new THREE.ExtrudeGeometry(dShapes, {
+      depth: 14,
+      bevelEnabled: true,
+      bevelThickness: 3,
+      bevelSize: 2.2,
+      bevelSegments: 4,
+      steps: 1,
+    });
+    dGeom.computeBoundingBox();
+    const dSize = new THREE.Vector3();
+    dGeom.boundingBox!.getSize(dSize);
+    const dScale = 1.35 / Math.max(dSize.x, dSize.y);
+    dGeom.scale(dScale, -dScale, dScale);
     dGeom.center();
 
-    const rGeom = new THREE.ExtrudeGeometry(rShapes, extrudeSettings);
-    rGeom.center();
-    rGeom.scale(0.012, -0.012, 0.012);
+    // Rupee geometry with matching depth & bevel
+    const rGeom = new THREE.ExtrudeGeometry(rShapes, {
+      depth: 55,
+      bevelEnabled: true,
+      bevelThickness: 12,
+      bevelSize: 9,
+      bevelSegments: 4,
+      steps: 1,
+    });
+    rGeom.computeBoundingBox();
+    const rSize = new THREE.Vector3();
+    rGeom.boundingBox!.getSize(rSize);
+    const rScale = 1.35 / Math.max(rSize.x, rSize.y);
+    rGeom.scale(rScale, -rScale, rScale);
     rGeom.center();
 
     // Create raining items
@@ -110,9 +128,9 @@ export default function ThreeCurrencyRain({ scrollVelocityRef, scrollProgressRef
     }
 
     const items: FallingItem[] = [];
-    const topY = 7.5;
-    const bottomY = -7.5;
-    const spawnWidth = isMobile ? 6 : 14;
+    const topY = 9.0;
+    const bottomY = -9.0;
+    const spawnWidth = isMobile ? 8 : 18;
 
     for (let i = 0; i < symbolCount; i++) {
       const isDollar = i % 2 === 0;
@@ -121,21 +139,21 @@ export default function ThreeCurrencyRain({ scrollVelocityRef, scrollProgressRef
 
       const x = THREE.MathUtils.randFloat(-spawnWidth / 2, spawnWidth / 2);
       const y = THREE.MathUtils.randFloat(bottomY, topY);
-      const z = THREE.MathUtils.randFloat(-7, 1);
+      const z = THREE.MathUtils.randFloat(-7.5, 1.2);
 
       mesh.position.set(x, y, z);
-      const scale = THREE.MathUtils.randFloat(0.65, 1.1);
+      const scale = THREE.MathUtils.randFloat(0.65, 1.15);
       mesh.scale.set(scale, scale, scale);
 
       scene.add(mesh);
 
       items.push({
         mesh,
-        baseSpeed: THREE.MathUtils.randFloat(0.8, 1.8),
-        baseSpin: THREE.MathUtils.randFloat(0.8, 2.2) * (Math.random() > 0.5 ? 1 : -1),
+        baseSpeed: THREE.MathUtils.randFloat(0.9, 1.9), // Reduced speed by 50%
+        baseSpin: THREE.MathUtils.randFloat(0.6, 1.4) * (Math.random() > 0.5 ? 1 : -1),
         tiltX: THREE.MathUtils.randFloat(-0.25, 0.25),
         tiltZ: THREE.MathUtils.randFloat(-0.2, 0.2),
-        wobbleSpeed: THREE.MathUtils.randFloat(1.5, 3.0),
+        wobbleSpeed: THREE.MathUtils.randFloat(1.2, 2.4),
         timeOffset: Math.random() * Math.PI * 2,
       });
     }
@@ -206,10 +224,10 @@ export default function ThreeCurrencyRain({ scrollVelocityRef, scrollProgressRef
 
       // Update symbols
       for (const item of items) {
-        const speed = (item.baseSpeed + currentVelocityBoost * 0.45) * dt;
+        const speed = (item.baseSpeed + currentVelocityBoost * 0.3) * dt;
         item.mesh.position.y -= speed;
 
-        const spin = (item.baseSpin + (item.baseSpin > 0 ? 1 : -1) * currentVelocityBoost * 0.3) * dt;
+        const spin = (item.baseSpin + (item.baseSpin > 0 ? 1 : -1) * currentVelocityBoost * 0.2) * dt;
         item.mesh.rotation.y += spin;
 
         item.mesh.rotation.x = item.tiltX + Math.sin(time * item.wobbleSpeed + item.timeOffset) * 0.12;
@@ -217,9 +235,9 @@ export default function ThreeCurrencyRain({ scrollVelocityRef, scrollProgressRef
 
         // Respawn when leaving bottom
         if (item.mesh.position.y < bottomY) {
-          item.mesh.position.y = topY + THREE.MathUtils.randFloat(0, 1.5);
+          item.mesh.position.y = topY + THREE.MathUtils.randFloat(0, 2);
           item.mesh.position.x = THREE.MathUtils.randFloat(-spawnWidth / 2, spawnWidth / 2);
-          item.mesh.position.z = THREE.MathUtils.randFloat(-7, 1);
+          item.mesh.position.z = THREE.MathUtils.randFloat(-7.5, 1.2);
         }
       }
 
