@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React from 'react';
 import {
   Instagram,
   Twitter,
@@ -9,25 +9,45 @@ import {
   MapPin,
   Phone,
 } from 'lucide-react';
-import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
-gsap.registerPlugin(ScrollTrigger);
+interface FooterLinkProps {
+  href: string;
+  children: React.ReactNode;
+  onNavigate?: (id: string) => void;
+}
 
-const FooterLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
-  <li>
-    <a
-      href={href}
-      className="text-[#8d869c] hover:text-[#ece8f5] transition-colors duration-300 text-sm flex items-center group py-0.5"
-    >
-      <span>{children}</span>
-      <ArrowUpRight
-        aria-hidden="true"
-        className="w-3 h-3 ml-1 opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-y-0.5 group-hover:translate-y-0 text-[#2bd96b]"
-      />
-    </a>
-  </li>
-);
+const FooterLink = ({ href, children, onNavigate }: FooterLinkProps) => {
+  const handleClick = (e: React.MouseEvent) => {
+    if (href.startsWith('#')) {
+      e.preventDefault();
+      const targetId = href.substring(1);
+      if (onNavigate) {
+        onNavigate(targetId);
+      } else {
+        const el = document.getElementById(targetId);
+        if (el) {
+          el.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    }
+  };
+
+  return (
+    <li>
+      <a
+        href={href}
+        onClick={handleClick}
+        className="text-[#8d869c] hover:text-[#ece8f5] transition-colors duration-300 text-sm flex items-center group py-0.5 cursor-pointer"
+      >
+        <span>{children}</span>
+        <ArrowUpRight
+          aria-hidden="true"
+          className="w-3 h-3 ml-1 opacity-0 group-hover:opacity-100 transition-all duration-300 -translate-y-0.5 group-hover:translate-y-0 text-[#2bd96b]"
+        />
+      </a>
+    </li>
+  );
+};
 
 const SocialIcon = ({
   icon: Icon,
@@ -53,6 +73,7 @@ interface FooterProps {
   onPrivacyClick?: () => void;
   onTermsClick?: () => void;
   onCookiesClick?: () => void;
+  onNavigate?: (id: string) => void;
 }
 
 export default function Footer({
@@ -60,32 +81,8 @@ export default function Footer({
   onPrivacyClick,
   onTermsClick,
   onCookiesClick,
+  onNavigate,
 }: FooterProps) {
-  const footerRef = useRef<HTMLElement>(null);
-  const wordmarkRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion || !wordmarkRef.current || !footerRef.current) return;
-
-    // Footer wordmark rises in, scrubbed
-    gsap.fromTo(
-      wordmarkRef.current,
-      { y: 80, opacity: 0.05 },
-      {
-        y: 0,
-        opacity: 0.22,
-        ease: 'none',
-        scrollTrigger: {
-          trigger: footerRef.current,
-          start: 'top 85%',
-          end: 'bottom bottom',
-          scrub: 1,
-        },
-      }
-    );
-  }, []);
-
   const handleSocialClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (onSocialClick) onSocialClick();
@@ -107,13 +104,10 @@ export default function Footer({
   };
 
   return (
-    <footer
-      ref={footerRef}
-      className="relative z-10 pt-24 pb-32 border-t border-white/10 bg-[#07060b] overflow-hidden"
-    >
+    <footer className="relative z-10 pt-24 pb-32 border-t border-white/10 bg-[#07060b] overflow-hidden">
       <div className="max-w-7xl mx-auto px-gutter">
         {/* 4-Column Layout */}
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-20">
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-12 mb-16">
           {/* Column 1: Brand */}
           <div className="md:col-span-4 flex flex-col gap-6">
             <div className="flex flex-col gap-4">
@@ -139,10 +133,10 @@ export default function Footer({
                 Services
               </h4>
               <ul className="flex flex-col gap-3">
-                <FooterLink href="#services">Web Development</FooterLink>
-                <FooterLink href="#services">UI/UX Design</FooterLink>
-                <FooterLink href="#services">Branding</FooterLink>
-                <FooterLink href="#services">Video Editing</FooterLink>
+                <FooterLink href="#services" onNavigate={onNavigate}>Web Development</FooterLink>
+                <FooterLink href="#services" onNavigate={onNavigate}>UI/UX Design</FooterLink>
+                <FooterLink href="#services" onNavigate={onNavigate}>Branding</FooterLink>
+                <FooterLink href="#services" onNavigate={onNavigate}>Video Editing</FooterLink>
               </ul>
             </div>
 
@@ -152,10 +146,10 @@ export default function Footer({
                 Agency
               </h4>
               <ul className="flex flex-col gap-3">
-                <FooterLink href="#home">About Us</FooterLink>
-                <FooterLink href="#portfolio">Our Work</FooterLink>
-                <FooterLink href="#results">Success Stories</FooterLink>
-                <FooterLink href="#connect">Careers</FooterLink>
+                <FooterLink href="#home" onNavigate={onNavigate}>About Us</FooterLink>
+                <FooterLink href="#portfolio" onNavigate={onNavigate}>Our Work</FooterLink>
+                <FooterLink href="#results" onNavigate={onNavigate}>Success Stories</FooterLink>
+                <FooterLink href="#connect" onNavigate={onNavigate}>Careers</FooterLink>
               </ul>
             </div>
 
@@ -182,19 +176,8 @@ export default function Footer({
           </div>
         </div>
 
-        {/* Giant Outlined Wordmark */}
-        <div className="relative py-6 my-8 border-y border-white/5 overflow-hidden">
-          <div
-            ref={wordmarkRef}
-            aria-hidden="true"
-            className="text-center font-heading font-black tracking-tighter select-none pointer-events-none text-[18vw] leading-none stroke-wordmark overflow-hidden"
-          >
-            DELECTRA
-          </div>
-        </div>
-
         {/* Bottom Bar */}
-        <div className="pt-8 flex flex-col md:flex-row justify-between items-center gap-6">
+        <div className="pt-8 border-t border-white/10 flex flex-col md:flex-row justify-between items-center gap-6">
           <div className="flex items-center gap-2">
             <p className="font-heading text-[10px] font-semibold uppercase tracking-widest text-[#8d869c]">
               © 2026 DELECTRA. ALL RIGHTS RESERVED.

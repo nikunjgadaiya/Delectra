@@ -37,29 +37,29 @@ export default function ThreeCurrencyRain({ scrollVelocityRef, scrollProgressRef
     renderer.setPixelRatio(pixelRatio);
     renderer.setSize(window.innerWidth, window.innerHeight);
 
-    // Lights - brighter and clearer
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.75);
+    // Lights - increased brightness by 30%
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.975);
     scene.add(ambientLight);
 
-    const dirLight = new THREE.DirectionalLight(0xffffff, 1.2);
+    const dirLight = new THREE.DirectionalLight(0xffffff, 1.56);
     dirLight.position.set(5, 12, 6);
     scene.add(dirLight);
 
-    const rimLight = new THREE.DirectionalLight(new THREE.Color('#c9b2ff'), 0.5);
+    const rimLight = new THREE.DirectionalLight(new THREE.Color('#c9b2ff'), 0.65);
     rimLight.position.set(-6, -4, -4);
     scene.add(rimLight);
 
-    const greenPointLight = new THREE.PointLight(new THREE.Color('#2bd96b'), 4.2, 35);
+    const greenPointLight = new THREE.PointLight(new THREE.Color('#2bd96b'), 5.46, 35);
     greenPointLight.position.set(0, 3, 4);
     scene.add(greenPointLight);
 
-    // Material
+    // Material - increased emissive brightness by 30%
     const material = new THREE.MeshStandardMaterial({
       color: new THREE.Color('#2bd96b'),
       metalness: 0.8,
       roughness: 0.22,
       emissive: new THREE.Color('#12532a'),
-      emissiveIntensity: 0.4,
+      emissiveIntensity: 0.52,
     });
 
     // Create extruded geometries from SVG paths for $ and ₹
@@ -211,9 +211,9 @@ export default function ThreeCurrencyRain({ scrollVelocityRef, scrollProgressRef
         canvasRef.current.style.opacity = currentOpacity.toFixed(3);
       }
 
-      // Parallax camera easing
-      const targetCamX = prefersReducedMotion ? 0 : pointerX * 0.45;
-      const targetCamY = prefersReducedMotion ? 0 : -pointerY * 0.3;
+      // Parallax camera easing (increased panning intensity by 50%)
+      const targetCamX = prefersReducedMotion ? 0 : pointerX * 4;
+      const targetCamY = prefersReducedMotion ? 0 : -pointerY * 4;
       camera.position.x += (targetCamX - camera.position.x) * 0.05;
       camera.position.y += (targetCamY - camera.position.y) * 0.05;
       camera.lookAt(0, 0, 0);

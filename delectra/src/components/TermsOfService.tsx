@@ -67,24 +67,26 @@ const TermsSection = ({
 );
 
 const TermsOfService = ({ onBack }: { onBack: () => void }) => {
+  const containerRef = React.useRef<HTMLDivElement>(null);
+
   React.useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'instant' });
+    if (containerRef.current) {
+      containerRef.current.scrollTop = 0;
+    }
   }, []);
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black overflow-y-auto">
+    <div
+      ref={containerRef}
+      data-lenis-prevent
+      className="fixed inset-0 z-[100] bg-black overflow-y-auto"
+    >
       {/* Background Orbs */}
       <div className="fixed top-[-10%] left-[-10%] w-[500px] h-[500px] bg-violet-900/15 blur-[120px] rounded-full pointer-events-none" />
       <div className="fixed bottom-[10%] right-[-5%] w-[400px] h-[400px] bg-indigo-900/8 blur-[100px] rounded-full pointer-events-none" />
       <div className="fixed top-[50%] left-[50%] w-[600px] h-[600px] bg-purple-900/5 blur-[150px] rounded-full pointer-events-none -translate-x-1/2 -translate-y-1/2" />
 
-      {/* Decorative Grid Lines */}
-      <div className="fixed inset-0 opacity-[0.03] pointer-events-none">
-        <div className="absolute top-0 left-[20%] w-[1px] h-full bg-gradient-to-b from-transparent via-white to-transparent" />
-        <div className="absolute top-0 left-[40%] w-[1px] h-full bg-gradient-to-b from-transparent via-white to-transparent" />
-        <div className="absolute top-0 left-[60%] w-[1px] h-full bg-gradient-to-b from-transparent via-white to-transparent" />
-        <div className="absolute top-0 left-[80%] w-[1px] h-full bg-gradient-to-b from-transparent via-white to-transparent" />
-      </div>
+
 
       {/* Fixed Top Bar */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-black/60 backdrop-blur-2xl border-b border-white/5">

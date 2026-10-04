@@ -35,7 +35,7 @@ const InvertCursor: React.FC = () => {
       currentPos.current.y += (mousePos.current.y - currentPos.current.y) * 0.6;
 
       // Smooth scale interpolation for hover effect
-      const targetScale = isHoveringRef.current ? 1.3 : 1;
+      const targetScale = isHoveringRef.current ? 1.5 : 1;
       currentScale.current += (targetScale - currentScale.current) * 0.15;
 
       if (cursor) {

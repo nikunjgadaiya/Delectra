@@ -13,7 +13,9 @@ import {
   Globe,
   Star,
   ArrowUpRight,
+  ArrowUp,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import Footer from './components/Footer';
 import SocialsComingSoon from './components/SocialsComingSoon';
 import PrivacyPolicy from './components/PrivacyPolicy';
@@ -22,6 +24,7 @@ import CookiesPolicy from './components/CookiesPolicy';
 import InvertCursor from './components/InvertCursor';
 import SplashScreen from './components/SplashScreen';
 import ContactForm from './components/ContactForm';
+import FAQSection from './components/FAQSection';
 import AdminPanel from './components/AdminPanel';
 import ThreeCurrencyRain from './components/ThreeCurrencyRain';
 import ServiceMarquee from './components/ServiceMarquee';
@@ -38,7 +41,7 @@ const portfolioProjects = [
     category: 'Website Development',
     tag: 'Website Development',
     description: 'A modern agricultural company that utilizes advanced drones to efficiently spray water and fertilizer on crops.',
-    image: '/drriftaire-3d.jpg',
+    image: '/drriftaire-drone-farm.jpg',
   },
 ];
 
@@ -91,6 +94,7 @@ export default function App() {
   const [activeSection, setActiveSection] = useState('home');
   const [activeServiceRow, setActiveServiceRow] = useState<number>(0);
   const [isAdminView, setIsAdminView] = useState(window.location.pathname === '/admin');
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   // Shared refs for 3D velocity and scroll syncing
   const scrollVelocityRef = useRef<number>(0);
@@ -115,6 +119,28 @@ export default function App() {
     window.addEventListener('popstate', handleLocationChange);
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
+
+  // Handle full-screen modals: lock body/html scroll to eliminate duplicate scrollbar and pause Lenis
+  const isModalOpen = showSocials || showPrivacy || showTerms || showCookies;
+  useEffect(() => {
+    if (isModalOpen) {
+      const originalHtmlOverflow = document.documentElement.style.overflow;
+      const originalBodyOverflow = document.body.style.overflow;
+      document.documentElement.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
+      lenisRef.current?.stop();
+
+      return () => {
+        document.documentElement.style.overflow = originalHtmlOverflow;
+        document.body.style.overflow = originalBodyOverflow;
+        lenisRef.current?.start();
+      };
+    } else {
+      document.documentElement.style.overflow = '';
+      document.body.style.overflow = '';
+      lenisRef.current?.start();
+    }
+  }, [isModalOpen]);
 
   // Initialize Lenis Smooth Scroll synced with GSAP
   useEffect(() => {
@@ -329,10 +355,12 @@ export default function App() {
     return () => ctx.revert();
   }, [showSplash, isAdminView]);
 
-  // Section scrollspy for nav indicator
+  // Section scrollspy for nav indicator and back to top visibility
   useEffect(() => {
     const handleScroll = () => {
-      const sections = ['home', 'why-us', 'portfolio', 'services', 'results', 'connect'];
+      setShowBackToTop(window.scrollY > 400);
+
+      const sections = ['home', 'why-us', 'portfolio', 'services', 'results', 'connect', 'faq'];
       const scrollY = window.scrollY + 300;
       for (const sectionId of sections) {
         const el = document.getElementById(sectionId);
@@ -351,8 +379,8 @@ export default function App() {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const scrollToSection = (e: React.MouseEvent<HTMLAnchorElement>, id: string) => {
-    e.preventDefault();
+  const scrollToSection = (e?: React.MouseEvent, id: string = 'home') => {
+    if (e) e.preventDefault();
     const element = document.getElementById(id);
     if (element) {
       if (lenisRef.current) {
@@ -362,6 +390,15 @@ export default function App() {
       }
       setActiveSection(id);
     }
+  };
+
+  const scrollToTop = () => {
+    if (lenisRef.current) {
+      lenisRef.current.scrollTo(0, { duration: 1.4 });
+    } else {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    setActiveSection('home');
   };
 
   const handleSplashComplete = () => {
@@ -402,37 +439,25 @@ export default function App() {
       {/* Modals */}
       {showSocials && (
         <SocialsComingSoon
-          onBack={() => {
-            setShowSocials(false);
-            window.scrollTo({ top: 0, behavior: 'instant' });
-          }}
+          onBack={() => setShowSocials(false)}
         />
       )}
 
       {showPrivacy && (
         <PrivacyPolicy
-          onBack={() => {
-            setShowPrivacy(false);
-            window.scrollTo({ top: 0, behavior: 'instant' });
-          }}
+          onBack={() => setShowPrivacy(false)}
         />
       )}
 
       {showTerms && (
         <TermsOfService
-          onBack={() => {
-            setShowTerms(false);
-            window.scrollTo({ top: 0, behavior: 'instant' });
-          }}
+          onBack={() => setShowTerms(false)}
         />
       )}
 
       {showCookies && (
         <CookiesPolicy
-          onBack={() => {
-            setShowCookies(false);
-            window.scrollTo({ top: 0, behavior: 'instant' });
-          }}
+          onBack={() => setShowCookies(false)}
         />
       )}
 
@@ -776,6 +801,11 @@ export default function App() {
       </section>
 
       {/* =========================================================================
+          FAQ SECTION (Frequently Asked Questions)
+      ========================================================================== */}
+      <FAQSection onScrollToForm={() => scrollToSection(undefined, 'connect')} />
+
+      {/* =========================================================================
           4-COLUMN FOOTER (with giant outlined wordmark)
       ========================================================================== */}
       <Footer
@@ -783,6 +813,7 @@ export default function App() {
         onPrivacyClick={() => setShowPrivacy(true)}
         onTermsClick={() => setShowTerms(true)}
         onCookiesClick={() => setShowCookies(true)}
+        onNavigate={(id) => scrollToSection(undefined, id)}
       />
 
       {/* =========================================================================
@@ -871,6 +902,26 @@ export default function App() {
           </a>
         </div>
       </nav>
+
+      {/* =========================================================================
+          FLOATING BACK TO TOP BUTTON (bottom right)
+      ========================================================================== */}
+      <AnimatePresence>
+        {showBackToTop && (
+          <motion.button
+            type="button"
+            initial={{ opacity: 0, scale: 0.7, y: 15 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.7, y: 15 }}
+            transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+            onClick={scrollToTop}
+            aria-label="Back to top"
+            className="fixed bottom-4 sm:bottom-8 right-4 sm:right-8 z-40 w-11 h-11 sm:w-12 sm:h-12 rounded-full border border-white/10 bg-[#0e0d14]/85 hover:bg-[#2bd96b] hover:border-[#2bd96b] text-[#ece8f5] hover:text-[#07060b] backdrop-blur-xl flex items-center justify-center transition-all duration-300 shadow-[0_10px_30px_rgba(0,0,0,0.6)] hover:shadow-[0_0_25px_rgba(43,217,107,0.4)] group cursor-pointer"
+          >
+            <ArrowUp className="w-5 h-5 transition-transform duration-300 group-hover:-translate-y-0.5" />
+          </motion.button>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

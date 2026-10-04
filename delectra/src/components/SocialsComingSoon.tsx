@@ -3,7 +3,10 @@ import { ArrowLeft, Zap } from 'lucide-react';
 
 const SocialsComingSoon = ({ onBack }: { onBack: () => void }) => {
   return (
-    <div className="fixed inset-0 z-[100] bg-[#07060b] flex flex-col items-center justify-center px-gutter text-center overflow-hidden">
+    <div
+      data-lenis-prevent
+      className="fixed inset-0 z-[100] bg-[#07060b] flex flex-col items-center justify-center px-gutter text-center overflow-hidden"
+    >
       {/* Background Glows */}
       <div
         aria-hidden="true"
