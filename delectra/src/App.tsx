@@ -30,6 +30,7 @@ import ThreeCurrencyRain from './components/ThreeCurrencyRain';
 import ServiceMarquee from './components/ServiceMarquee';
 import MagneticButton from './components/MagneticButton';
 import TypewriterHeading from './components/TypewriterHeading';
+import DrriftaireProject from './components/DrriftaireProject';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -91,6 +92,9 @@ export default function App() {
   const [showPrivacy, setShowPrivacy] = useState(false);
   const [showTerms, setShowTerms] = useState(false);
   const [showCookies, setShowCookies] = useState(false);
+  const [showDrriftaireProject, setShowDrriftaireProject] = useState(
+    window.location.pathname === '/project/drriftaire' || window.location.hash === '#drriftaire'
+  );
   const [activeSection, setActiveSection] = useState('home');
   const [activeServiceRow, setActiveServiceRow] = useState<number>(0);
   const [isAdminView, setIsAdminView] = useState(window.location.pathname === '/admin');
@@ -115,13 +119,16 @@ export default function App() {
   useEffect(() => {
     const handleLocationChange = () => {
       setIsAdminView(window.location.pathname === '/admin');
+      setShowDrriftaireProject(
+        window.location.pathname === '/project/drriftaire' || window.location.hash === '#drriftaire'
+      );
     };
     window.addEventListener('popstate', handleLocationChange);
     return () => window.removeEventListener('popstate', handleLocationChange);
   }, []);
 
   // Handle full-screen modals: lock body/html scroll to eliminate duplicate scrollbar and pause Lenis
-  const isModalOpen = showSocials || showPrivacy || showTerms || showCookies;
+  const isModalOpen = showSocials || showPrivacy || showTerms || showCookies || showDrriftaireProject;
   useEffect(() => {
     if (isModalOpen) {
       const originalHtmlOverflow = document.documentElement.style.overflow;
@@ -461,6 +468,20 @@ export default function App() {
         />
       )}
 
+      {showDrriftaireProject && (
+        <DrriftaireProject
+          onBack={() => {
+            setShowDrriftaireProject(false);
+            if (window.location.pathname === '/project/drriftaire' || window.location.hash === '#drriftaire') {
+              window.history.pushState(null, '', '/');
+            }
+          }}
+          onOpenContact={() => {
+            scrollToSection(undefined, 'contact');
+          }}
+        />
+      )}
+
       {/* =========================================================================
           HERO SECTION
       ========================================================================== */}
@@ -496,7 +517,7 @@ export default function App() {
 
           {/* Subheading */}
           <p className="hero-anim-item text-base sm:text-lg md:text-xl text-[#8d869c] max-w-2xl mx-auto mb-8 leading-relaxed">
-            Strategic design, content, branding, and digital execution focused on one thing — growth.
+            Design, content, branding, and digital execution focused on one thing — growth.
           </p>
         </div>
       </header>
@@ -618,9 +639,17 @@ export default function App() {
                   </p>
                 )}
               </div>
-              <a href="#contact" className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#2bd96b]/50 transition-all rounded-full text-sm font-semibold uppercase tracking-wider backdrop-blur-md self-start md:self-auto">
-                View Project <ArrowUpRight className="w-4 h-4 text-[#2bd96b]" />
-              </a>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowDrriftaireProject(true);
+                  window.history.pushState(null, '', '/project/drriftaire');
+                }}
+                className="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-[#2bd96b]/50 transition-all rounded-full text-sm font-semibold uppercase tracking-wider backdrop-blur-md self-start md:self-auto cursor-pointer group hover:scale-102 active:scale-98"
+              >
+                <span>View Project</span>
+                <ArrowUpRight className="w-4 h-4 text-[#2bd96b] transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />
+              </button>
             </div>
           </div>
         </div>
