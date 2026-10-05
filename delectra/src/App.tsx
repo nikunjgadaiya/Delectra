@@ -477,7 +477,22 @@ export default function App() {
             }
           }}
           onOpenContact={() => {
-            scrollToSection(undefined, 'contact');
+            setShowDrriftaireProject(false);
+            if (window.location.pathname === '/project/drriftaire' || window.location.hash === '#drriftaire') {
+              window.history.pushState(null, '', '/');
+            }
+            setTimeout(() => {
+              scrollToSection(undefined, 'contact');
+            }, 50);
+          }}
+          onNavigate={(id) => {
+            setShowDrriftaireProject(false);
+            if (window.location.pathname === '/project/drriftaire' || window.location.hash === '#drriftaire') {
+              window.history.pushState(null, '', '/');
+            }
+            setTimeout(() => {
+              scrollToSection(undefined, id);
+            }, 50);
           }}
         />
       )}
