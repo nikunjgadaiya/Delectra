@@ -258,14 +258,54 @@
 .frame-circles {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 8px;
 }
 
 .frame-circle {
-  width: 9px;
-  height: 9px;
+  width: 12px;
+  height: 12px;
   border-radius: 50%;
-  background-color: var(--line);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  box-sizing: border-box;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25), 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease, filter 0.15s ease;
+  cursor: default;
+}
+
+.frame-circle-close {
+  background-color: #ff5f56;
+  border: 1px solid #e0443e;
+}
+
+.frame-circle-minimize {
+  background-color: #ffbd2e;
+  border: 1px solid #dea123;
+}
+
+.frame-circle-maximize {
+  background-color: #27c93f;
+  border: 1px solid #1aab29;
+}
+
+.frame-circle-icon {
+  width: 6.5px;
+  height: 6.5px;
+  display: block;
+  opacity: 0.8;
+  transition: opacity 0.15s ease;
+}
+
+.frame-circles:hover .frame-circle-icon,
+.frame-circle:hover .frame-circle-icon {
+  opacity: 1;
+}
+
+.frame-circle:hover {
+  filter: brightness(1.1);
+  transform: scale(1.06);
 }
 
 .frame-title {
@@ -637,20 +677,27 @@
 }
 
 /* =========================================================================
-   MOTION SYSTEM (Slow text reveal via IntersectionObserver)
-   No other animations on the page.
+   MOTION SYSTEM (Slow text & container reveal via IntersectionObserver)
+   Containers slide in with blur from the edges matching text timing.
 ========================================================================== */
 
 /* Default State: fully visible for No-JS, SSR & prefers-reduced-motion */
 .reveal-word,
-.reveal-letter {
+.reveal-letter,
+.browser-frame {
   opacity: 1;
   filter: none;
   transform: none;
+}
+
+.reveal-word,
+.reveal-letter {
   display: inline-block;
 }
 
-/* When JavaScript is active AND prefers-reduced-motion is NOT set */
+/* -------------------------------------------------------------------------
+   1. TEXT REVEAL: Staggered words & letters
+-------------------------------------------------------------------------- */
 .drriftaire-page.motion-ready .reveal-target:not(.is-revealed) .reveal-word,
 .drriftaire-page.motion-ready .reveal-target:not(.is-revealed) .reveal-letter {
   opacity: 0;
@@ -676,13 +723,155 @@
   margin-right: 0.28em;
 }
 
+/* -------------------------------------------------------------------------
+   2. CONTAINER REVEAL: Slow slide-in with blur dissolving from the edges
+-------------------------------------------------------------------------- */
+.drriftaire-page.motion-ready .browser-frame.reveal-target {
+  transition: transform 1.5s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 1.4s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity, filter;
+}
+
+/* Hidden state: sliding in with blur from edges */
+.drriftaire-page.motion-ready .browser-frame.reveal-target:not(.is-revealed).frame-slide-left,
+.drriftaire-page.motion-ready .showcase-row:not(.reversed) .frame-side > figure > .browser-frame.reveal-target:not(.is-revealed) {
+  opacity: 0;
+  filter: blur(14px);
+  transform: translateX(-70px);
+}
+
+.drriftaire-page.motion-ready .browser-frame.reveal-target:not(.is-revealed).frame-slide-right,
+.drriftaire-page.motion-ready .showcase-row.reversed .frame-side > figure > .browser-frame.reveal-target:not(.is-revealed) {
+  opacity: 0;
+  filter: blur(14px);
+  transform: translateX(70px);
+}
+
+/* Row 3 sub-frames grid: staggered entry from respective sides */
+.drriftaire-page.motion-ready .sub-frames-grid .browser-frame:first-child.reveal-target:not(.is-revealed) {
+  opacity: 0;
+  filter: blur(14px);
+  transform: translateX(-50px);
+}
+
+.drriftaire-page.motion-ready .sub-frames-grid .browser-frame:last-child.reveal-target:not(.is-revealed) {
+  opacity: 0;
+  filter: blur(14px);
+  transform: translateX(50px);
+}
+
+.drriftaire-page.motion-ready .sub-frames-grid .browser-frame:first-child.reveal-target {
+  transition-delay: 100ms;
+}
+
+.drriftaire-page.motion-ready .sub-frames-grid .browser-frame:last-child.reveal-target {
+  transition-delay: 200ms;
+}
+
+/* Revealed state: settled at origin with full clarity */
+.drriftaire-page.motion-ready .browser-frame.reveal-target.is-revealed {
+  opacity: 1;
+  filter: blur(0px);
+  transform: translateX(0);
+}
+
+/* Responsive adjustment below 900px */
+@media (max-width: 900px) {
+  .drriftaire-page.motion-ready .browser-frame.reveal-target:not(.is-revealed).frame-slide-left,
+  .drriftaire-page.motion-ready .showcase-row:not(.reversed) .frame-side > figure > .browser-frame.reveal-target:not(.is-revealed) {
+    transform: translateX(-40px);
+  }
+
+  .drriftaire-page.motion-ready .browser-frame.reveal-target:not(.is-revealed).frame-slide-right,
+  .drriftaire-page.motion-ready .showcase-row.reversed .frame-side > figure > .browser-frame.reveal-target:not(.is-revealed) {
+    transform: translateX(40px);
+  }
+
+  .drriftaire-page.motion-ready .sub-frames-grid .browser-frame:first-child.reveal-target:not(.is-revealed) {
+    transform: translateX(-30px);
+  }
+
+  .drriftaire-page.motion-ready .sub-frames-grid .browser-frame:last-child.reveal-target:not(.is-revealed) {
+    transform: translateX(30px);
+  }
+}
+
+/* =========================================================================
+   PAGE EMERGENCE ANIMATION (Emerge from clicked button)
+========================================================================== */
+.drriftaire-page.has-origin-rect {
+  transition: clip-path 0.7s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.7s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: clip-path;
+  box-shadow: inset 0 0 0 1.5px rgba(43, 217, 107, 0.45),
+              inset 0 0 30px rgba(43, 217, 107, 0.15);
+}
+
+.drriftaire-page.has-origin-rect.page-entered {
+  box-shadow: none;
+}
+
+.drriftaire-page.has-origin-rect.page-closing {
+  transition: clip-path 0.55s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.55s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: inset 0 0 0 1.5px rgba(43, 217, 107, 0.45),
+              inset 0 0 30px rgba(43, 217, 107, 0.15);
+}
+
+/* Page inner content emergence transition */
+.drriftaire-page.has-origin-rect .drriftaire-container {
+  transition: transform 0.75s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity, filter;
+}
+
+.drriftaire-page.has-origin-rect.page-emerging:not(.page-expanded) .drriftaire-container {
+  transform: translateY(32px) scale(0.97);
+  opacity: 0;
+  filter: blur(8px);
+}
+
+.drriftaire-page.has-origin-rect.page-closing .drriftaire-container {
+  transform: translateY(24px) scale(0.97);
+  opacity: 0;
+  filter: blur(8px);
+  transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 0.45s ease,
+              filter 0.45s ease;
+}
+
+/* Floating bottom nav entrance during emergence */
+.drriftaire-page.has-origin-rect.page-emerging:not(.page-expanded) .floating-pill-nav {
+  opacity: 0;
+  transform: translateX(-50%) translateY(24px);
+}
+
+.drriftaire-page.has-origin-rect .floating-pill-nav {
+  transition: opacity 0.5s ease 0.25s,
+              transform 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.25s;
+}
+
+.drriftaire-page.has-origin-rect.page-closing .floating-pill-nav {
+  opacity: 0;
+  transform: translateX(-50%) translateY(24px);
+  transition: opacity 0.25s ease,
+              transform 0.25s ease;
+}
+
 /* Reduced motion preference */
 @media (prefers-reduced-motion: reduce) {
   .drriftaire-page.motion-ready .reveal-word,
-  .drriftaire-page.motion-ready .reveal-letter {
+  .drriftaire-page.motion-ready .reveal-letter,
+  .drriftaire-page.motion-ready .browser-frame.reveal-target,
+  .drriftaire-page.has-origin-rect,
+  .drriftaire-page.has-origin-rect .drriftaire-container,
+  .drriftaire-page.has-origin-rect .floating-pill-nav {
     opacity: 1 !important;
     filter: none !important;
     transform: none !important;
     transition: none !important;
+    clip-path: none !important;
   }
 }

@@ -1,11 +1,19 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { LayoutGrid, MessageSquare, Terminal, Zap } from 'lucide-react';
 import './DrriftaireProject.css';
+
+export interface ProjectOriginRect {
+  top: number;
+  left: number;
+  width: number;
+  height: number;
+}
 
 interface DrriftaireProjectProps {
   onBack: () => void;
   onOpenContact?: () => void;
   onNavigate?: (sectionId: string) => void;
+  originRect?: ProjectOriginRect | null;
 }
 
 /* =========================================================================
@@ -85,6 +93,8 @@ interface BrowserFrameProps {
   hint: string;
   aspectRatio?: '16/10' | '4/3';
   children?: React.ReactNode;
+  slideFrom?: 'left' | 'right';
+  className?: string;
 }
 
 function BrowserFrame({
@@ -92,15 +102,46 @@ function BrowserFrame({
   hint,
   aspectRatio = '16/10',
   children,
+  slideFrom = 'left',
+  className = '',
 }: BrowserFrameProps) {
   return (
-    <div className="browser-frame">
-      {/* Top bar: 3 circles in --line color + 13px muted title */}
+    <div
+      className={`browser-frame reveal-target frame-slide-${slideFrom} ${className}`}
+    >
+      {/* Top bar: macOS traffic lights (red cross, yellow minus, green plus) + title */}
       <div className="frame-top-bar">
         <div className="frame-circles" aria-hidden="true">
-          <span className="frame-circle" />
-          <span className="frame-circle" />
-          <span className="frame-circle" />
+          <span className="frame-circle frame-circle-close" title="Close">
+            <svg viewBox="0 0 10 10" className="frame-circle-icon" aria-hidden="true">
+              <path
+                d="M2 2L8 8M8 2L2 8"
+                stroke="#4C0002"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+              />
+            </svg>
+          </span>
+          <span className="frame-circle frame-circle-minimize" title="Minimize">
+            <svg viewBox="0 0 10 10" className="frame-circle-icon" aria-hidden="true">
+              <path
+                d="M1.8 5H8.2"
+                stroke="#5C3C00"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+              />
+            </svg>
+          </span>
+          <span className="frame-circle frame-circle-maximize" title="Maximize">
+            <svg viewBox="0 0 10 10" className="frame-circle-icon" aria-hidden="true">
+              <path
+                d="M1.8 5H8.2M5 1.8V8.2"
+                stroke="#004D1A"
+                strokeWidth="1.4"
+                strokeLinecap="round"
+              />
+            </svg>
+          </span>
         </div>
         <span className="frame-title">{title}</span>
       </div>
@@ -183,20 +224,90 @@ export default function DrriftaireProject({
   onBack,
   onOpenContact,
   onNavigate,
+  originRect,
 }: DrriftaireProjectProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [motionReady, setMotionReady] = useState(false);
+  const [isExpanded, setIsExpanded] = useState<boolean>(!originRect);
+  const [isFullyEntered, setIsFullyEntered] = useState<boolean>(!originRect);
+  const [isClosing, setIsClosing] = useState<boolean>(false);
+
+  // Compute button pill coordinates as starting clip-path
+  const initialClip = originRect
+    ? `inset(${Math.max(0, Math.round(originRect.top))}px ${Math.max(
+        0,
+        Math.round(window.innerWidth - (originRect.left + originRect.width))
+      )}px ${Math.max(
+        0,
+        Math.round(window.innerHeight - (originRect.top + originRect.height))
+      )}px ${Math.max(0, Math.round(originRect.left))}px round ${Math.round(
+        originRect.height / 2
+      )}px)`
+    : undefined;
+
+  const fullClip = 'inset(0px 0px 0px 0px round 0px)';
+
+  // Emerge from button on mount
+  useEffect(() => {
+    if (!originRect) {
+      setIsFullyEntered(true);
+      return;
+    }
+
+    let timer: ReturnType<typeof setTimeout>;
+    // Double requestAnimationFrame ensures browser paints the initial button-pill clip before transitioning
+    const raf1 = requestAnimationFrame(() => {
+      const raf2 = requestAnimationFrame(() => {
+        setIsExpanded(true);
+        timer = setTimeout(() => {
+          setIsFullyEntered(true);
+        }, 750);
+      });
+      return () => cancelAnimationFrame(raf2);
+    });
+
+    return () => {
+      cancelAnimationFrame(raf1);
+      clearTimeout(timer);
+    };
+  }, [originRect]);
+
+  // Smooth collapse back into the button when exiting
+  const handleClose = useCallback(
+    (action?: () => void) => {
+      if (isClosing) return;
+
+      if (!originRect) {
+        if (action) action();
+        else onBack();
+        return;
+      }
+
+      setIsClosing(true);
+      setIsFullyEntered(false); // Reactivate clip-path transition
+
+      requestAnimationFrame(() => {
+        setIsExpanded(false);
+      });
+
+      setTimeout(() => {
+        if (action) action();
+        else onBack();
+      }, 550);
+    },
+    [isClosing, originRect, onBack]
+  );
 
   // Keyboard navigation: Escape key closes project page
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        onBack();
+        handleClose();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onBack]);
+  }, [handleClose]);
 
   // Motion setup: only enable hidden initial state when JS is running and reduced-motion is off
   useEffect(() => {
@@ -214,7 +325,7 @@ export default function DrriftaireProject({
     const container = containerRef.current;
     if (!container) return;
 
-    // Observe all .reveal-target elements when 20% enters viewport
+    // Observe all .reveal-target elements when 12% enters viewport
     const targets = container.querySelectorAll('.reveal-target');
 
     const observer = new IntersectionObserver(
@@ -228,14 +339,14 @@ export default function DrriftaireProject({
       },
       {
         root: container,
-        threshold: 0.2,
+        threshold: 0.12,
       }
     );
 
-    // Initial check: immediately reveal elements already visible above the fold
+    // Initial check: immediately reveal elements already clearly visible above the fold
     targets.forEach((target) => {
       const rect = target.getBoundingClientRect();
-      if (rect.top < window.innerHeight * 0.85 && rect.bottom > 0) {
+      if (rect.top < window.innerHeight * 0.75 && rect.bottom > 0) {
         target.classList.add('is-revealed');
       } else {
         observer.observe(target);
@@ -266,25 +377,42 @@ export default function DrriftaireProject({
   }, []);
 
   const handleNavClick = (sectionId: string) => {
-    if (onNavigate) {
-      onNavigate(sectionId);
-    } else {
-      onBack();
-    }
+    handleClose(() => {
+      if (onNavigate) {
+        onNavigate(sectionId);
+      } else {
+        onBack();
+      }
+    });
   };
 
   return (
     <div
       ref={containerRef}
       data-lenis-prevent
-      className={`drriftaire-page ${motionReady ? 'motion-ready' : ''}`}
+      style={
+        originRect
+          ? {
+              clipPath: isFullyEntered
+                ? 'none'
+                : isExpanded
+                ? fullClip
+                : initialClip,
+            }
+          : undefined
+      }
+      className={`drriftaire-page ${motionReady ? 'motion-ready' : ''} ${
+        originRect ? 'has-origin-rect' : ''
+      } ${isExpanded ? 'page-expanded' : 'page-emerging'} ${
+        isClosing ? 'page-closing' : ''
+      } ${isFullyEntered ? 'page-entered' : ''}`}
     >
       <div className="drriftaire-container">
         {/* 1. "Back to all work" text link at top left */}
         <div className="back-link-wrapper">
           <button
             type="button"
-            onClick={onBack}
+            onClick={() => handleClose()}
             className="back-link"
             aria-label="Back to all work"
           >
@@ -356,6 +484,7 @@ export default function DrriftaireProject({
                 title="Home page"
                 hint="Home page, 16:10"
                 aspectRatio="16/10"
+                slideFrom="left"
               />
             </figure>
           </div>
@@ -439,6 +568,7 @@ export default function DrriftaireProject({
                 title="Booking page"
                 hint="Booking page, 16:10"
                 aspectRatio="16/10"
+                slideFrom="right"
               />
             </figure>
           </div>
@@ -457,6 +587,7 @@ export default function DrriftaireProject({
                 title="Admin panel, all bookings"
                 hint="Bookings table, 16:10"
                 aspectRatio="16/10"
+                slideFrom="left"
               />
 
               {/* 2-column grid of two smaller frames (4:3 placeholders) */}
@@ -467,6 +598,7 @@ export default function DrriftaireProject({
                   title="Filters"
                   hint="Filters, 4:3"
                   aspectRatio="4/3"
+                  slideFrom="left"
                 />
 
                 {/* PLACEHOLDER 5: Remarks and sales (4:3)
@@ -475,6 +607,7 @@ export default function DrriftaireProject({
                   title="Remarks and sales"
                   hint="Remarks and sales, 4:3"
                   aspectRatio="4/3"
+                  slideFrom="right"
                 />
               </div>
             </figure>
@@ -574,6 +707,7 @@ export default function DrriftaireProject({
                 title="Email"
                 hint="Confirmation email, 16:10"
                 aspectRatio="16/10"
+                slideFrom="right"
               />
             </figure>
           </div>
@@ -596,7 +730,7 @@ export default function DrriftaireProject({
               type="button"
               onClick={() => {
                 if (onOpenContact) {
-                  onOpenContact();
+                  handleClose(onOpenContact);
                 } else {
                   handleNavClick('connect');
                 }
@@ -682,7 +816,7 @@ export default function DrriftaireProject({
           type="button"
           onClick={() => {
             if (onOpenContact) {
-              onOpenContact();
+              handleClose(onOpenContact);
             } else {
               handleNavClick('connect');
             }

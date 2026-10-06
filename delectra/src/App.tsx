@@ -95,6 +95,12 @@ export default function App() {
   const [showDrriftaireProject, setShowDrriftaireProject] = useState(
     window.location.pathname === '/project/drriftaire' || window.location.hash === '#drriftaire'
   );
+  const [projectOriginRect, setProjectOriginRect] = useState<{
+    top: number;
+    left: number;
+    width: number;
+    height: number;
+  } | null>(null);
   const [activeSection, setActiveSection] = useState('home');
   const [activeServiceRow, setActiveServiceRow] = useState<number>(0);
   const [isAdminView, setIsAdminView] = useState(window.location.pathname === '/admin');
@@ -470,6 +476,7 @@ export default function App() {
 
       {showDrriftaireProject && (
         <DrriftaireProject
+          originRect={projectOriginRect}
           onBack={() => {
             setShowDrriftaireProject(false);
             if (window.location.pathname === '/project/drriftaire' || window.location.hash === '#drriftaire') {
@@ -656,7 +663,14 @@ export default function App() {
               </div>
               <button
                 type="button"
-                onClick={() => {
+                onClick={(e) => {
+                  const rect = e.currentTarget.getBoundingClientRect();
+                  setProjectOriginRect({
+                    top: Math.round(rect.top),
+                    left: Math.round(rect.left),
+                    width: Math.round(rect.width),
+                    height: Math.round(rect.height),
+                  });
                   setShowDrriftaireProject(true);
                   window.history.pushState(null, '', '/project/drriftaire');
                 }}
