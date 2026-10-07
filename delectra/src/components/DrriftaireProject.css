@@ -329,6 +329,10 @@
   box-sizing: border-box;
 }
 
+.frame-placeholder.aspect-16-9 {
+  aspect-ratio: 16 / 9;
+}
+
 .frame-placeholder.aspect-16-10 {
   aspect-ratio: 16 / 10;
 }
@@ -378,12 +382,16 @@
   object-fit: cover;
   border-radius: 8px;
   z-index: 2;
+  display: block;
 }
 
+.frame-placeholder.has-image,
 .frame-placeholder:has(> img) {
   border: none;
+  background-color: #0b0b12;
 }
 
+.frame-placeholder.has-image > .placeholder-inner,
 .frame-placeholder:has(> img) > .placeholder-inner {
   display: none;
 }

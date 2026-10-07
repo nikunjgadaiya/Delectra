@@ -90,21 +90,34 @@ function RevealLetters({
 
 interface BrowserFrameProps {
   title: string;
-  hint: string;
-  aspectRatio?: '16/10' | '4/3';
+  hint?: string;
+  aspectRatio?: '16/9' | '16/10' | '4/3';
   children?: React.ReactNode;
   slideFrom?: 'left' | 'right';
   className?: string;
+  src?: string;
+  alt?: string;
 }
 
 function BrowserFrame({
   title,
   hint,
-  aspectRatio = '16/10',
+  aspectRatio = '16/9',
   children,
   slideFrom = 'left',
   className = '',
+  src,
+  alt,
 }: BrowserFrameProps) {
+  const aspectClass =
+    aspectRatio === '4/3'
+      ? 'aspect-4-3'
+      : aspectRatio === '16/10'
+      ? 'aspect-16-10'
+      : 'aspect-16-9';
+
+  const hasImage = Boolean(src || children);
+
   return (
     <div
       className={`browser-frame reveal-target frame-slide-${slideFrom} ${className}`}
@@ -146,13 +159,15 @@ function BrowserFrame({
         <span className="frame-title">{title}</span>
       </div>
 
-      {/* Placeholder area: 14px margin, 1.5px dashed border, 8px radius */}
+      {/* Frame placeholder / image area */}
       <div
-        className={`frame-placeholder ${
-          aspectRatio === '4/3' ? 'aspect-4-3' : 'aspect-16-10'
+        className={`frame-placeholder ${aspectClass} ${
+          hasImage ? 'has-image' : ''
         }`}
       >
-        {children ? (
+        {src ? (
+          <img src={src} alt={alt || title} loading="lazy" />
+        ) : children ? (
           children
         ) : (
           <div className="placeholder-inner">
@@ -174,7 +189,7 @@ function BrowserFrame({
               <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
             </svg>
             <span className="placeholder-text">Add screenshot</span>
-            <span className="placeholder-hint">{hint}</span>
+            {hint && <span className="placeholder-hint">{hint}</span>}
           </div>
         )}
       </div>
@@ -473,18 +488,18 @@ export default function DrriftaireProject({
 
         {/* =========================================================================
             ROW 1: Frame on Left (1.3fr), Text on Right (1fr)
-            Frame title "Home page", hint "Home page, 16:10"
+            Frame title "Home page", 16:9
         ========================================================================== */}
         <section className="showcase-row">
           <div className="frame-side">
             <figure style={{ margin: 0 }}>
-              {/* PLACEHOLDER 1: Home page (16:10)
-                  To drop your screenshot, insert: <img src="/your-image.png" alt="Home page" /> inside */}
               <BrowserFrame
                 title="Home page"
-                hint="Home page, 16:10"
-                aspectRatio="16/10"
+                hint="Home page, 16:9"
+                aspectRatio="16/9"
                 slideFrom="left"
+                src="/drriftaire/home-page-16x9.png"
+                alt="Drriftaire Home Page"
               />
             </figure>
           </div>
@@ -525,7 +540,7 @@ export default function DrriftaireProject({
         {/* =========================================================================
             ROW 2 (reversed): Text on Left (1fr), Frame on Right (1.3fr)
             Below 900px: frame first
-            Frame title "Booking page", hint "Booking page, 16:10"
+            Frame title "Booking page", 16:9
         ========================================================================== */}
         <section className="showcase-row reversed">
           <div className="text-side">
@@ -562,13 +577,13 @@ export default function DrriftaireProject({
 
           <div className="frame-side">
             <figure style={{ margin: 0 }}>
-              {/* PLACEHOLDER 2: Booking page (16:10)
-                  To drop your screenshot, insert: <img src="/your-image.png" alt="Booking page" /> inside */}
               <BrowserFrame
                 title="Booking page"
-                hint="Booking page, 16:10"
-                aspectRatio="16/10"
+                hint="Booking page, 16:9"
+                aspectRatio="16/9"
                 slideFrom="right"
+                src="/drriftaire/booking-page-16x9.png"
+                alt="Drriftaire Booking Page"
               />
             </figure>
           </div>
@@ -576,38 +591,41 @@ export default function DrriftaireProject({
 
         {/* =========================================================================
             ROW 3: Frame on Left (1.3fr), Text on Right (1fr)
-            Image side: One large frame + 2-column grid of two smaller 4:3 frames
+            Image side: One large 16:9 frame + 2-column grid of two smaller 4:3 frames
         ========================================================================== */}
         <section className="showcase-row">
           <div className="frame-side">
             <figure style={{ margin: 0 }}>
-              {/* PLACEHOLDER 3 (Large): Admin panel, all bookings (16:10)
-                  To drop your screenshot, insert: <img src="/your-image.png" alt="Admin panel, all bookings" /> inside */}
+              {/* Admin panel, all bookings (16:9) */}
               <BrowserFrame
                 title="Admin panel, all bookings"
-                hint="Bookings table, 16:10"
-                aspectRatio="16/10"
+                hint="Bookings table, 16:9"
+                aspectRatio="16/9"
                 slideFrom="left"
+                src="/drriftaire/admin-panel-16x9.png"
+                alt="Drriftaire Admin Panel - All Bookings"
               />
 
-              {/* 2-column grid of two smaller frames (4:3 placeholders) */}
+              {/* 2-column grid of two smaller frames (4:3) */}
               <div className="sub-frames-grid">
-                {/* PLACEHOLDER 4: Filters (4:3)
-                    To drop your screenshot, insert: <img src="/your-image.png" alt="Filters" /> inside */}
+                {/* Filters (4:3) */}
                 <BrowserFrame
                   title="Filters"
                   hint="Filters, 4:3"
                   aspectRatio="4/3"
                   slideFrom="left"
+                  src="/drriftaire/filters-4x3.png"
+                  alt="Drriftaire Admin Filters"
                 />
 
-                {/* PLACEHOLDER 5: Remarks and sales (4:3)
-                    To drop your screenshot, insert: <img src="/your-image.png" alt="Remarks and sales" /> inside */}
+                {/* Remarks and sales (4:3) */}
                 <BrowserFrame
                   title="Remarks and sales"
                   hint="Remarks and sales, 4:3"
                   aspectRatio="4/3"
                   slideFrom="right"
+                  src="/drriftaire/remarks-sales-4x3.png"
+                  alt="Drriftaire Remarks and Sales"
                 />
               </div>
             </figure>
@@ -659,7 +677,7 @@ export default function DrriftaireProject({
         {/* =========================================================================
             ROW 4 (reversed): Text on Left (1fr), Frame on Right (1.3fr)
             Below 900px: frame first
-            Frame title "Email", hint "Confirmation email, 16:10"
+            Frame title "Email", 16:9
         ========================================================================== */}
         <section className="showcase-row reversed">
           <div className="text-side">
@@ -701,13 +719,13 @@ export default function DrriftaireProject({
 
           <div className="frame-side">
             <figure style={{ margin: 0 }}>
-              {/* PLACEHOLDER 6: Email (16:10)
-                  To drop your screenshot, insert: <img src="/your-image.png" alt="Email" /> inside */}
               <BrowserFrame
                 title="Email"
-                hint="Confirmation email, 16:10"
-                aspectRatio="16/10"
+                hint="Confirmation email, 16:9"
+                aspectRatio="16/9"
                 slideFrom="right"
+                src="/drriftaire/email-16x9.png"
+                alt="Drriftaire Confirmation Email"
               />
             </figure>
           </div>
@@ -745,12 +763,12 @@ export default function DrriftaireProject({
           </div>
         </section>
 
-        {/* 5. Small footer: "Delectra" on left, "Replace the dashed cards with your screenshots" on right */}
+        {/* 5. Small footer: "Delectra" on left */}
         <footer className="drriftaire-footer">
           <div className="footer-inner">
             <span className="footer-brand">Delectra</span>
             <span className="footer-note">
-              Replace the dashed cards with your screenshots
+              Drriftaire · Agricultural Drone Spraying Platform
             </span>
           </div>
         </footer>
