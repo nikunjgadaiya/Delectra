@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   HelpCircle,
@@ -13,6 +13,7 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import MagneticButton from './MagneticButton';
+import './FAQSection.css';
 
 interface FAQItem {
   id: string;
@@ -77,8 +78,91 @@ interface FAQSectionProps {
   onScrollToForm?: () => void;
 }
 
+/* =========================================================================
+   TEXT REVEAL HELPER (Staggered Word Blur Animation)
+   Matches the signature word-by-word reveal from DrriftaireProject.
+========================================================================== */
+function RevealWords({
+  text,
+  startIndex = 0,
+  className = '',
+}: {
+  text: string;
+  startIndex?: number;
+  className?: string;
+}) {
+  const words = text.split(' ').filter(Boolean);
+
+  return (
+    <span className={`reveal-words ${className}`} aria-hidden="true">
+      {words.map((word, i) => (
+        <span
+          key={i}
+          className="reveal-word"
+          style={{
+            transitionDelay: `${Math.min((startIndex + i) * 55, 1200)}ms`,
+          }}
+        >
+          {word}
+        </span>
+      ))}
+    </span>
+  );
+}
+
 export default function FAQSection({ onScrollToForm }: FAQSectionProps) {
   const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const sectionRef = useRef<HTMLElement>(null);
+  const [motionReady, setMotionReady] = useState(false);
+
+  // Motion setup: only enable hidden initial state when JS is active and reduced-motion is off
+  useEffect(() => {
+    const prefersReducedMotion = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
+
+    if (prefersReducedMotion) {
+      // Without motion, leave elements in default visible state
+      return;
+    }
+
+    setMotionReady(true);
+
+    const section = sectionRef.current;
+    if (!section) return;
+
+    // Observe all .reveal-target elements when entering the viewport
+    const targets = section.querySelectorAll('.reveal-target');
+
+    const observer = new IntersectionObserver(
+      (entries, obs) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            entry.target.classList.add('is-revealed');
+            obs.unobserve(entry.target);
+          }
+        });
+      },
+      {
+        threshold: 0.05,
+        rootMargin: '0px 0px -20px 0px',
+      }
+    );
+
+    // Observe all targets and immediately reveal those already in the viewport
+    targets.forEach((target) => {
+      const rect = target.getBoundingClientRect();
+      if (rect.top < window.innerHeight && rect.bottom > 0) {
+        target.classList.add('is-revealed');
+      } else {
+        observer.observe(target);
+      }
+    });
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   const toggleAccordion = (index: number) => {
     setOpenIndex((prev) => (prev === index ? null : index));
@@ -99,7 +183,10 @@ export default function FAQSection({ onScrollToForm }: FAQSectionProps) {
   return (
     <section
       id="faq"
-      className="py-28 md:py-36 px-gutter relative z-10 border-t border-white/10 bg-[#07060b]/80"
+      ref={sectionRef}
+      className={`faq-section py-28 md:py-36 px-gutter relative z-10 border-t border-white/10 bg-[#07060b]/80 ${
+        motionReady ? 'motion-ready' : ''
+      }`}
     >
       {/* Subtle background ambient lighting */}
       <div
@@ -110,17 +197,29 @@ export default function FAQSection({ onScrollToForm }: FAQSectionProps) {
       <div className="max-w-4xl mx-auto relative">
         {/* Section Header */}
         <div className="text-center mb-16 md:mb-20">
-          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/[0.03] text-xs font-heading font-medium tracking-widest uppercase text-[#2bd96b] mb-5 backdrop-blur-sm">
+          <div className="faq-badge-reveal reveal-target inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full border border-white/10 bg-white/[0.03] text-xs font-heading font-medium tracking-widest uppercase text-[#2bd96b] mb-5 backdrop-blur-sm">
             <HelpCircle className="w-3.5 h-3.5 text-[#2bd96b]" />
             <span>Got Questions?</span>
           </div>
 
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-[#ece8f5] tracking-tight mb-5">
-            Frequently Asked <span className="accent-serif text-[#c9b2ff]">Questions</span>
+          <h2
+            className="text-4xl md:text-5xl lg:text-6xl font-heading font-bold text-[#ece8f5] tracking-tight mb-5 reveal-target"
+            aria-label="Frequently Asked Questions"
+          >
+            <RevealWords text="Frequently Asked" startIndex={0} />{' '}
+            <span className="accent-serif text-[#c9b2ff]">
+              <RevealWords text="Questions" startIndex={2} />
+            </span>
           </h2>
 
-          <p className="text-[#8d869c] text-sm md:text-base max-w-xl mx-auto leading-relaxed">
-            Everything you need to know about our services, timelines, pricing, and how we collaborate.
+          <p
+            className="text-[#8d869c] text-sm md:text-base max-w-xl mx-auto leading-relaxed reveal-target"
+            aria-label="Everything you need to know about our services, timelines, pricing, and how we collaborate."
+          >
+            <RevealWords
+              text="Everything you need to know about our services, timelines, pricing, and how we collaborate."
+              startIndex={0}
+            />
           </p>
         </div>
 
@@ -133,10 +232,14 @@ export default function FAQSection({ onScrollToForm }: FAQSectionProps) {
             return (
               <div
                 key={item.id}
-                className={`transition-all duration-300 rounded-2xl md:rounded-3xl border ${isOpen
+                style={{
+                  transitionDelay: `${Math.min(index * 75, 550)}ms`,
+                }}
+                className={`faq-item-card reveal-target rounded-2xl md:rounded-3xl border ${
+                  isOpen
                     ? 'border-[#2bd96b]/35 bg-[#0e0d14]/90 shadow-[0_12px_36px_rgba(0,0,0,0.45)]'
                     : 'border-white/10 bg-[#0e0d14]/50 hover:border-white/20 hover:bg-[#0e0d14]/75'
-                  } backdrop-blur-md overflow-hidden`}
+                } backdrop-blur-md overflow-hidden`}
               >
                 <button
                   type="button"
@@ -156,8 +259,9 @@ export default function FAQSection({ onScrollToForm }: FAQSectionProps) {
 
                     {/* Question text */}
                     <h3
-                      className={`text-base md:text-lg lg:text-xl font-heading font-bold transition-colors duration-200 ${isOpen ? 'text-[#ece8f5]' : 'text-[#ece8f5]/90 hover:text-white'
-                        }`}
+                      className={`text-base md:text-lg lg:text-xl font-heading font-bold transition-colors duration-200 ${
+                        isOpen ? 'text-[#ece8f5]' : 'text-[#ece8f5]/90 hover:text-white'
+                      }`}
                     >
                       {item.question}
                     </h3>
@@ -165,10 +269,11 @@ export default function FAQSection({ onScrollToForm }: FAQSectionProps) {
 
                   {/* Indicator Icon */}
                   <div
-                    className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center border transition-all duration-300 ${isOpen
+                    className={`w-9 h-9 shrink-0 rounded-full flex items-center justify-center border transition-all duration-300 ${
+                      isOpen
                         ? 'border-[#2bd96b]/50 bg-[#2bd96b]/15 text-[#2bd96b] rotate-180'
                         : 'border-white/10 bg-white/[0.03] text-[#8d869c]'
-                      }`}
+                    }`}
                   >
                     <ChevronDown className="w-4 h-4" />
                   </div>
@@ -179,9 +284,9 @@ export default function FAQSection({ onScrollToForm }: FAQSectionProps) {
                   {isOpen && (
                     <motion.div
                       id={`faq-answer-${item.id}`}
-                      initial={{ height: 0, opacity: 0 }}
-                      animate={{ height: 'auto', opacity: 1 }}
-                      exit={{ height: 0, opacity: 0 }}
+                      initial={{ height: 0, opacity: 0, filter: 'blur(8px)' }}
+                      animate={{ height: 'auto', opacity: 1, filter: 'blur(0px)' }}
+                      exit={{ height: 0, opacity: 0, filter: 'blur(8px)' }}
                       transition={{ duration: 0.35, ease: [0.16, 1, 0.3, 1] }}
                       className="overflow-hidden"
                     >
@@ -197,7 +302,10 @@ export default function FAQSection({ onScrollToForm }: FAQSectionProps) {
         </div>
 
         {/* Bottom Contact Help Card */}
-        <div className="mt-14 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-6">
+        <div
+          style={{ transitionDelay: '150ms' }}
+          className="faq-bottom-card reveal-target mt-14 p-6 md:p-8 rounded-2xl md:rounded-3xl border border-white/10 bg-white/[0.02] backdrop-blur-md flex flex-col sm:flex-row items-center justify-between gap-6"
+        >
           <div className="text-center sm:text-left">
             <h4 className="text-lg md:text-xl font-heading font-bold text-[#ece8f5] mb-1">
               Still have a question?

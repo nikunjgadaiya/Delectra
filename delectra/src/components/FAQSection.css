@@ -1,0 +1,129 @@
+/* =========================================================================
+   FAQ Section Motion & Blur Reveal System
+   Faithfully inspired by the Drriftaire Project detail page motion system:
+   - Word-by-word staggered blur reveal (8px blur -> 0px, 1.5s ease)
+   - Badge pill blur entrance
+   - Accordion cards smooth slide-in with 14px blur dissolution (staggered)
+   - Bottom support card blur dissolution
+   - Answer accordion expand/collapse blur transition
+========================================================================== */
+
+/* Default State: fully visible for No-JS, SSR & prefers-reduced-motion */
+.faq-section .reveal-word,
+.faq-section .faq-item-card,
+.faq-section .faq-bottom-card,
+.faq-section .faq-badge-reveal {
+  opacity: 1;
+  filter: none;
+  transform: none;
+}
+
+.faq-section .reveal-word {
+  display: inline-block;
+  margin-right: 0.28em;
+}
+
+/* -------------------------------------------------------------------------
+   1. TEXT REVEAL: Staggered words & badge
+-------------------------------------------------------------------------- */
+.faq-section.motion-ready .reveal-target:not(.is-revealed) .reveal-word {
+  opacity: 0;
+  filter: blur(8px);
+  transform: translateY(12px);
+}
+
+.faq-section.motion-ready .reveal-word {
+  display: inline-block;
+  transition: opacity 1.5s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 1.5s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, filter, transform;
+}
+
+.faq-section.motion-ready .reveal-target.is-revealed .reveal-word {
+  opacity: 1;
+  filter: blur(0px);
+  transform: translateY(0);
+}
+
+/* Header badge blur entrance */
+.faq-section.motion-ready .faq-badge-reveal:not(.is-revealed) {
+  opacity: 0;
+  filter: blur(10px);
+  transform: translateY(12px) scale(0.96);
+}
+
+.faq-section.motion-ready .faq-badge-reveal {
+  transition: opacity 1.3s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 1.3s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 1.3s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: opacity, filter, transform;
+}
+
+.faq-section.motion-ready .faq-badge-reveal.is-revealed {
+  opacity: 1;
+  filter: blur(0px);
+  transform: translateY(0) scale(1);
+}
+
+/* -------------------------------------------------------------------------
+   2. CARD CONTAINER REVEAL: Smooth slide-in with blur dissolving
+-------------------------------------------------------------------------- */
+.faq-section.motion-ready .faq-item-card.reveal-target {
+  transition: transform 1.35s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 1.25s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 1.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s ease,
+              background-color 0.3s ease,
+              box-shadow 0.3s ease;
+  will-change: transform, opacity, filter;
+}
+
+.faq-section.motion-ready .faq-item-card.reveal-target:not(.is-revealed) {
+  opacity: 0;
+  filter: blur(14px);
+  transform: translateY(32px);
+}
+
+.faq-section.motion-ready .faq-item-card.reveal-target.is-revealed {
+  opacity: 1;
+  filter: blur(0px);
+  transform: translateY(0);
+}
+
+/* Bottom help contact card blur entrance */
+.faq-section.motion-ready .faq-bottom-card.reveal-target {
+  transition: transform 1.35s cubic-bezier(0.16, 1, 0.3, 1),
+              opacity 1.25s cubic-bezier(0.16, 1, 0.3, 1),
+              filter 1.25s cubic-bezier(0.16, 1, 0.3, 1),
+              border-color 0.3s ease,
+              background-color 0.3s ease;
+  will-change: transform, opacity, filter;
+}
+
+.faq-section.motion-ready .faq-bottom-card.reveal-target:not(.is-revealed) {
+  opacity: 0;
+  filter: blur(14px);
+  transform: translateY(32px);
+}
+
+.faq-section.motion-ready .faq-bottom-card.reveal-target.is-revealed {
+  opacity: 1;
+  filter: blur(0px);
+  transform: translateY(0);
+}
+
+/* -------------------------------------------------------------------------
+   3. PREFERS-REDUCED-MOTION OVERRIDES
+-------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  .faq-section.motion-ready .reveal-word,
+  .faq-section.motion-ready .faq-badge-reveal,
+  .faq-section.motion-ready .faq-item-card.reveal-target,
+  .faq-section.motion-ready .faq-bottom-card.reveal-target {
+    opacity: 1 !important;
+    filter: none !important;
+    transform: none !important;
+    transition: none !important;
+  }
+}
